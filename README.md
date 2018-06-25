@@ -1,6 +1,30 @@
 # BlockchainNode
 
-**TODO: Add description**
+A node for the helium blockchain
+
+## Running
+
+In order to run locally, a number of dependencies must be met.
+
+(Note: These are required to build and run this node. Releases will be built in the future which require no external dependencies)
+
+### Erlang @ OTP 20
+Currently only Erlang OTP 20 is supported. Support for OTP 21 is coming. You can install OTP 20 using:
+
+```
+$ brew install erlang@20
+```
+
+### Pairing-Based Cryptography
+The [PBC (Pairing-Based Cryptography)](https://crypto.stanford.edu/pbc/) library is a free C library (released under the GNU Lesser General Public License) built on the GMP library that performs the mathematical operations underlying pairing-based cryptosystems.
+
+```
+$ wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
+$ tar -xvzf pbc-0.5.14.tar.gz
+$ ./configure
+$ make
+$ make install
+```
 
 ## Installation
 
