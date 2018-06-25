@@ -2,7 +2,7 @@
 
 A node for the helium blockchain
 
-## Running
+## Local Installation
 
 In order to run locally, a number of dependencies must be met.
 
@@ -29,6 +29,12 @@ Currently only Erlang OTP 20 is supported. Support for OTP 21 is coming. You can
 $ brew install erlang@20
 ```
 
+### Elixir
+
+```
+$ brew install elixir
+```
+
 ### Pairing-Based Cryptography
 The [PBC (Pairing-Based Cryptography)](https://crypto.stanford.edu/pbc/) library is a free C library (released under the GNU Lesser General Public License) built on the GMP library that performs the mathematical operations underlying pairing-based cryptosystems.
 
@@ -41,6 +47,30 @@ $ ./configure
 $ make
 $ make install
 ```
+
+### Clone blockchain-node
+
+Clone the `blockchain-node` project somewhere.
+
+```
+$ git clone git@github.com:helium/blockchain-node.git
+```
+
+### Install Mix Deps
+`cd` into the `blockchain-node` project and then run:
+
+```
+$ mix deps.get
+```
+
+## Running
+From the `blockchain-node` project directory run:
+
+```
+$ iex -S mix
+```
+
+You should now be able to access the API on `localhost:4001`
 
 ## Installation
 
