@@ -22,13 +22,6 @@ For OSX, make sure you have [Homebrew](https://brew.sh/) installed. We'll use it
 $ brew install autoconf automake wget yasm gmp libtool
 ```
 
-### Erlang @ OTP 20
-Currently only Erlang OTP 20 is supported. Support for OTP 21 is coming. You can install OTP 20 using:
-
-```
-$ brew install erlang@20
-```
-
 ### Elixir
 
 ```
