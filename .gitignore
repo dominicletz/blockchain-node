@@ -25,3 +25,4 @@ blockchain_node-*.tar
 /rel/
 /log/
 /data/
+/package/

@@ -14,8 +14,8 @@ defmodule BlockchainNode.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      # extra_applications: [:logger, :gpb, :intercept, :rand_compat]
-      extra_applications: [:logger],
+      extra_applications: [:logger, :gpb, :intercept, :rand_compat],
+      # extra_applications: [:logger],
       mod: {BlockchainNode.Application, []}
     ]
   end
