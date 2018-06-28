@@ -3,18 +3,38 @@ defmodule BlockchainNode.Worker do
   use GenServer
   @me __MODULE__
 
+  ## API
   def start_link(_) do
     GenServer.start_link(@me, %{}, name: @me)
   end
 
-  # GenServer callbacks
+  def get_swarm() do
+    GenServer.call(@me, :get_swarm)
+  end
+
+  def get_swarm_addr() do
+    GenServer.call(@me, :get_swarm_addr)
+  end
+
+  ## GenServer callbacks
   def init(state) do
     Process.send(self(), :start_swarm, [])
     {:ok, state}
   end
 
-  def handle_info(:start_swarm, state) do
-    {:libp2p_swarm_sup, swarm, :supervisor, _} =  List.keyfind(Supervisor.which_children(BlockchainNode.Supervisor), :libp2p_swarm_sup, 0)
+  def handle_call(:get_swarm, _from, state) do
+    {:reply, Map.get(state, :swarm), state}
+  end
+
+  def handle_call(:get_swarm_addr, _from, state) do
+    {:reply, Map.get(state, :address), state}
+  end
+
+  def handle_info(:start_swarm, _state) do
+    {:libp2p_swarm_sup, swarm, :supervisor, _} = BlockchainNode.Supervisor
+                                                 |> Supervisor.which_children
+                                                 |> List.keyfind(:libp2p_swarm_sup, 0)
+
     port = Application.get_env(:blockchain_node, :port)
 
     :ok = :libp2p_swarm.add_stream_handler(swarm,
