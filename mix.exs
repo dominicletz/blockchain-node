@@ -15,8 +15,8 @@ defmodule BlockchainNode.MixProject do
   def application do
     [
       extra_applications: [:logger, :gpb, :intercept, :rand_compat],
-      # extra_applications: [:logger],
-      mod: {BlockchainNode.Application, []}
+      mod: {BlockchainNode.Application, []},
+      env: [port: 0]
     ]
   end
 
@@ -24,7 +24,7 @@ defmodule BlockchainNode.MixProject do
   defp deps do
     [
       {:distillery, "~> 1.5", runtime: false},
-      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "rg/payment-txn"},
+      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "rg/payment-txn", runtime: false},
       {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "otp21", override: true},
       {:lager, ~r/.*/, env: :prod, git: "https://github.com/erlang-lager/lager.git", branch: "adt/sys-trace-func", manager: :rebar3, override: true},
       {:cowboy, "~> 1.0.0"},
