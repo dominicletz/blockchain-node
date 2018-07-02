@@ -23,7 +23,7 @@ defmodule BlockchainNode.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:distillery, "~> 1.5", runtime: false},
+      {:distillery, github: "bitwalker/distillery", branch: "master", runtime: false},
       {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "rg/payment-txn", runtime: false},
       {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "otp21", override: true},
       {:lager, ~r/.*/, env: :prod, git: "https://github.com/erlang-lager/lager.git", branch: "adt/sys-trace-func", manager: :rebar3, override: true},
