@@ -1,10 +1,11 @@
 %{
+  "artificery": {:hex, :artificery, "0.2.4", "eb9e43d5cae234b48e64ff075837e26b333cee3f5e271c1fb0d7b321f7ab07af", [:mix], [], "hexpm"},
   "base32": {:hex, :base32, "0.1.0", "044f6dc95709727ca2176f3e97a41ddaa76b5bc690d3536908618c0cb32616a2", [:rebar3], [], "hexpm"},
   "bitcask": {:git, "git@github.com:helium/bitcask.git", "f95f4827964b99ef7c3073102119f1c27a579561", [branch: "otp21"]},
   "blockchain": {:git, "git@github.com:helium/blockchain.git", "31d0e5788b5f06e04753e2f283fd300b20f83fc6", [branch: "rg/payment-txn"]},
   "cowboy": {:hex, :cowboy, "1.0.4", "a324a8df9f2316c833a470d918aaf73ae894278b8aa6226ce7a9bf699388f878", [:make, :rebar], [{:cowlib, "~> 1.0.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
   "cowlib": {:hex, :cowlib, "1.0.2", "9d769a1d062c9c3ac753096f868ca121e2730b9a377de23dec0f7e08b1df84ee", [:make], [], "hexpm"},
-  "distillery": {:hex, :distillery, "1.5.3", "b2f4fc34ec71ab4f1202a796f9290e068883b042319aa8c9aa45377ecac8597a", [:mix], [], "hexpm"},
+  "distillery": {:git, "https://github.com/allenan/distillery.git", "90d3323ceff5d3d9a5c42c5f2261850e6c18b906", [branch: "spaces"]},
   "ecc_compact": {:hex, :ecc_compact, "1.0.2", "e0798da70db6c79528c5e33a9e282e23076d879fb03c1b1681c6e3f56ec786ce", [:rebar3], [], "hexpm"},
   "erl_base58": {:hex, :erl_base58, "0.0.1", "37710854461d71df338e73c65776302db41c4bab4674d2ec134ed7bcfc7b5552", [:rebar3], [], "hexpm"},
   "erlang_pbc": {:git, "https://github.com/helium/erlang_pbc.git", "7bc90d179efedff205081fc6bf3263342f67cce1", [branch: "master"]},
