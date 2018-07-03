@@ -1,11 +1,13 @@
 defmodule BlockchainNode.Accounts do
   alias BlockchainNode.Accounts.Account
 
-  @keys_dir "#{System.user_home()}/.helium/keys"
+  def keys_dir do
+    "#{System.user_home()}/.helium/keys"
+  end
 
   def list do
-    File.mkdir_p(@keys_dir)
-    with {:ok, files} <- File.ls(@keys_dir) do
+    File.mkdir_p(keys_dir())
+    with {:ok, files} <- File.ls(keys_dir()) do
       for address <- files, do: load_account(address)
     end
   end
@@ -13,25 +15,25 @@ defmodule BlockchainNode.Accounts do
   def create do
     keys = {private_key, public_key} = :libp2p_crypto.generate_keys()
     address = to_string(:libp2p_crypto.pubkey_to_b58(public_key))
-    File.mkdir_p(@keys_dir)
+    File.mkdir_p(keys_dir())
     filename = to_filename(address)
     :libp2p_crypto.save_keys(keys, to_charlist(filename))
     load_account(address)
   end
 
   def show(address) do
-    File.mkdir_p(@keys_dir)
+    File.mkdir_p(keys_dir())
     load_account(address)
   end
 
   def delete(address) do
-    File.mkdir_p(@keys_dir)
+    File.mkdir_p(keys_dir())
     filename = to_filename(address)
     File.rm(filename)
   end
 
   defp to_filename(address) do
-    [@keys_dir, address] |> Enum.join("/")
+    [keys_dir(), address] |> Enum.join("/")
   end
 
   defp load_account(address) do
