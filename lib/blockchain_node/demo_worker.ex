@@ -5,12 +5,13 @@ defmodule BlockchainNode.DemoWorker do
   """
 
   use GenServer
+  alias BlockchainNode.Accounts
 
   def start_link do
     GenServer.start_link(__MODULE__, %{})
   end
 
-  def init(state) do
+  def init(_state) do
     schedule_work() # Schedule work to be performed at some point
     {:ok, 1}
   end
@@ -18,12 +19,7 @@ defmodule BlockchainNode.DemoWorker do
   def handle_info(:work, state) do
     newHeight = state + 1
     Enum.each :pg2.get_members(:websocket_connections), fn pid ->
-      send pid, Poison.encode!(%{
-                                 status: %{
-                                   nodeHeight: newHeight,
-                                   chainHeight: newHeight
-                                 }
-                               })
+      send pid, Poison.encode!(payload(newHeight))
     end
     schedule_work() # Reschedule once more
     {:noreply, newHeight}
@@ -31,5 +27,15 @@ defmodule BlockchainNode.DemoWorker do
 
   defp schedule_work() do
     Process.send_after(self(), :work, 2 * 1000) # In 2 seconds
+  end
+
+  defp payload(state) do
+    %{
+      status: %{
+        nodeHeight: state,
+        chainHeight: state
+      },
+      accounts: Accounts.list()
+    }
   end
 end
