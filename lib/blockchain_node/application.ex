@@ -21,14 +21,7 @@ defmodule BlockchainNode.Application do
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
       Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch]),
-      worker(BlockchainNode.Worker, [:ok]),
-      worker(BlockchainNode.DemoWorker, []),
-      supervisor(:libp2p_swarm_sup,
-                 [[:libp2p_swarm_sup, swarm_config]],
-                 restart: :permanent,
-                 shutdown: :brutal_kill,
-                 id: :libp2p_swarm_sup,
-                 modules: [:libp2p_swarm_sup])
+      worker(BlockchainNode.DemoWorker, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
