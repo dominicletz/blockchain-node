@@ -21,7 +21,7 @@ defmodule BlockchainNode.Application do
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
       Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch]),
-      worker(BlockchainNode.DemoWorker, [])
+      worker(BlockchainNode.Watcher, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

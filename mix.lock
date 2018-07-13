@@ -2,7 +2,7 @@
   "artificery": {:hex, :artificery, "0.2.4", "eb9e43d5cae234b48e64ff075837e26b333cee3f5e271c1fb0d7b321f7ab07af", [:mix], [], "hexpm"},
   "base32": {:hex, :base32, "0.1.0", "044f6dc95709727ca2176f3e97a41ddaa76b5bc690d3536908618c0cb32616a2", [:rebar3], [], "hexpm"},
   "bitcask": {:git, "git@github.com:helium/bitcask.git", "f95f4827964b99ef7c3073102119f1c27a579561", [branch: "otp21"]},
-  "blockchain": {:git, "git@github.com:helium/blockchain.git", "079796d466d97cd7569e0c7bb03e20e08660f2d1", [branch: "rg/node-worker"]},
+  "blockchain": {:git, "git@github.com:helium/blockchain.git", "1ab29ec0e3a8df5e9476ae9427ddc09765c3ed6c", [branch: "rg/node-worker"]},
   "cowboy": {:hex, :cowboy, "1.0.4", "a324a8df9f2316c833a470d918aaf73ae894278b8aa6226ce7a9bf699388f878", [:make, :rebar], [{:cowlib, "~> 1.0.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
   "cowlib": {:hex, :cowlib, "1.0.2", "9d769a1d062c9c3ac753096f868ca121e2730b9a377de23dec0f7e08b1df84ee", [:make], [], "hexpm"},
   "distillery": {:git, "https://github.com/allenan/distillery.git", "90d3323ceff5d3d9a5c42c5f2261850e6c18b906", [branch: "spaces"]},
