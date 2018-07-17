@@ -2,10 +2,11 @@ defmodule BlockchainNode.Gateways do
   alias BlockchainNode.Gateways.Gateway
 
   def list do
-    for _n <- 1..5, do: generate_gateway()
+    for _n <- 1..(:rand.uniform(12)), do: generate_gateway()
   end
 
   def show(address) do
+    generate_gateway()
   end
 
   defp generate_gateway do
@@ -14,7 +15,8 @@ defmodule BlockchainNode.Gateways do
       address: to_string(address),
       public_key: Base.encode64(:erlang.term_to_binary(public_key)), # temp
       status: generate_status(),
-      blocks_mined: :rand.uniform(100)
+      blocks_mined: :rand.uniform(100),
+      location: "San Francisco"
     }
   end
 
