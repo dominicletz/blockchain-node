@@ -3,6 +3,9 @@ defmodule BlockchainNode.Accounts.Router do
   alias BlockchainNode.Accounts
 
   plug :match
+  plug Plug.Parsers, parsers: [:json],
+                     pass:  ["application/json"],
+                     json_decoder: Poison
   plug :dispatch
 
   get "/" do
@@ -21,6 +24,14 @@ defmodule BlockchainNode.Accounts.Router do
   post "/" do
     account = Accounts.create()
     send_resp(conn, 201, Poison.encode!(account))
+  end
+
+  post "/:from_address/pay" do
+    params = conn.body_params
+    amount = params["amount"]
+    to_address = params["toAddress"]
+    Accounts.pay(from_address, to_address, amount)
+    send_resp(conn, 200, "")
   end
 
   match _ do

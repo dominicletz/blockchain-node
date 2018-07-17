@@ -6,6 +6,7 @@ defmodule BlockchainNode.Watcher do
 
   use GenServer
   alias BlockchainNode.Accounts
+  alias BlockchainNode.Explorer
 
   def start_link do
     GenServer.start_link(__MODULE__, %{})
@@ -51,7 +52,10 @@ defmodule BlockchainNode.Watcher do
         nodeHeight: height,
         chainHeight: height
       },
-      accounts: Accounts.list()
+      accounts: Accounts.list(),
+      explorer: %{
+        accounts: Explorer.list_accounts()
+      }
     }
   end
 end
