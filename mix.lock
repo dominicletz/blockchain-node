@@ -19,7 +19,7 @@
   "intercept": {:hex, :intercept, "1.0.0", "1f6c725e6fc070720643bd4d97ee53b1209365c80e520e1f5a1acb36712a7eb5", [:rebar3], [], "hexpm"},
   "lager": {:git, "https://github.com/erlang-lager/lager.git", "5cab2d8368cc05a0b859850680cd04fdb95f1e24", [branch: "adt/sys-trace-func"]},
   "leo_erasure": {:git, "https://github.com/helium/leo_erasure.git", "b25f455d9a390520245c9f56e6960c740bea0216", [branch: "develop"]},
-  "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "618eaaaa6921063560e1b6f18af15a8021924191", [branch: "master"]},
+  "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "87e7589298ed2952b4f7d4309e833a339e783820", [branch: "master"]},
   "merkerl": {:hex, :merkerl, "1.0.1", "fffa7591cb3c62e837533a1c71b3c3795194fc3e09541e25369f1c87af38efe1", [:rebar3], [], "hexpm"},
   "mime": {:hex, :mime, "1.3.0", "5e8d45a39e95c650900d03f897fbf99ae04f60ab1daa4a34c7a20a5151b7a5fe", [:mix], [], "hexpm"},
   "multiaddr": {:hex, :multiaddr, "1.1.1", "add874fa38f0294c136655b382865d359c8bf3eb28bc9a41433eebdb70b400d1", [:rebar3], [{:base32, "0.1.0", [hex: :base32, repo: "hexpm", optional: false]}, {:erl_base58, "0.0.1", [hex: :erl_base58, repo: "hexpm", optional: false]}, {:small_ints, "0.1.0", [hex: :small_ints, repo: "hexpm", optional: false]}], "hexpm"},

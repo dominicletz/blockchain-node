@@ -22,7 +22,9 @@ defmodule BlockchainNode.Accounts.Router do
   end
 
   post "/" do
-    account = Accounts.create()
+    params = conn.body_params
+    password = params["password"]
+    account = Accounts.create(password)
     send_resp(conn, 201, Poison.encode!(account))
   end
 
@@ -30,7 +32,8 @@ defmodule BlockchainNode.Accounts.Router do
     params = conn.body_params
     amount = params["amount"]
     to_address = params["toAddress"]
-    Accounts.pay(from_address, to_address, amount)
+    password = params["password"]
+    Accounts.pay(from_address, to_address, amount, password)
     send_resp(conn, 200, "")
   end
 
