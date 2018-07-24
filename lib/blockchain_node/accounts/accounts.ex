@@ -88,7 +88,8 @@ defmodule BlockchainNode.Accounts do
     %Account{
       address: address,
       public_key: data["public_key"],
-      balance: get_balance(address)
+      balance: get_balance(address),
+      encrypted: data["encrypted"]
     }
   end
 

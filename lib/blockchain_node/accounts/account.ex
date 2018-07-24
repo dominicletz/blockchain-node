@@ -1,4 +1,4 @@
 defmodule BlockchainNode.Accounts.Account do
   @derive [Poison.Encoder]
-  defstruct [:address, :public_key, :balance]
+  defstruct [:address, :public_key, :balance, :encrypted]
 end
