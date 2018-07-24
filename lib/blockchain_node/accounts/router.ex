@@ -37,6 +37,13 @@ defmodule BlockchainNode.Accounts.Router do
     send_resp(conn, 200, "")
   end
 
+  post "/:address/encrypt" do
+    params = conn.body_params
+    password = params["password"]
+    account = Accounts.encrypt(address, password)
+    send_resp(conn, 200, Poison.encode!(account))
+  end
+
   match _ do
     send_resp(conn, 404, "404")
   end

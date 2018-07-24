@@ -65,6 +65,23 @@ defmodule BlockchainNode.Accounts do
     :blockchain_node_worker.payment_txn(private_key, from, to, amount)
   end
 
+  def encrypt(address, password) do
+    {:ok, private_key, public_key} = load_keys(address, nil)
+    pem_bin = :libp2p_crypto.to_pem(private_key)
+    {iv, tag, data} = Crypto.encrypt(password, pem_bin)
+    file_content = Poison.encode!(%{
+                                     encrypted: true,
+                                     public_key: public_key_str(public_key),
+                                     iv: iv,
+                                     tag: tag,
+                                     data: data
+                                   })
+    delete(address)
+    filename = to_filename(address)
+    File.write(filename, file_content, [:binary])
+    load_account(address)
+  end
+
   defp to_filename(address) do
     [keys_dir(), address] |> Enum.join("/")
   end
