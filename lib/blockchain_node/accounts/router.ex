@@ -32,9 +32,28 @@ defmodule BlockchainNode.Accounts.Router do
     params = conn.body_params
     amount = params["amount"]
     to_address = params["toAddress"]
+    password = if params["password"] == "" do
+      nil
+    else
+      params["password"]
+    end
+
+    case Accounts.pay(from_address, to_address, amount, password) do
+      {:error, reason} ->
+        error = Poison.encode!(%{
+          error: to_string(reason)
+        })
+        send_resp(conn, 500, error)
+      _ ->
+        send_resp(conn, 200, "")
+    end
+  end
+
+  post "/:address/check_password" do
+    params = conn.body_params
     password = params["password"]
-    Accounts.pay(from_address, to_address, amount, password)
-    send_resp(conn, 200, "")
+    is_valid = Accounts.valid_password?(address, password)
+    send_resp(conn, 200, Poison.encode!(%{valid: is_valid}))
   end
 
   post "/:address/encrypt" do

@@ -58,11 +58,14 @@ defmodule BlockchainNode.Accounts do
   end
 
   def pay(from_address, to_address, amount, password) do
-    {:ok, private_key, _public_key} = load_keys(from_address, password)
-    from = address_bin(from_address)
-    to = address_bin(to_address)
+    case load_keys(from_address, password) do
+      {:ok, private_key, _public_key} ->
+        from = address_bin(from_address)
+        to = address_bin(to_address)
 
-    :blockchain_node_worker.payment_txn(private_key, from, to, amount)
+        :blockchain_node_worker.payment_txn(private_key, from, to, amount)
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   def encrypt(address, password) do
@@ -80,6 +83,13 @@ defmodule BlockchainNode.Accounts do
     filename = to_filename(address)
     File.write(filename, file_content, [:binary])
     load_account(address)
+  end
+
+  def valid_password?(address, password) do
+    case load_keys(address, password) do
+      {:ok, _private_key, _public_key} -> true
+      {:error, _reason} -> false
+    end
   end
 
   defp to_filename(address) do
@@ -152,7 +162,7 @@ defmodule BlockchainNode.Accounts do
     if is_connected?() do
       :blockchain_node_worker.balance(address_bin(address))
     else
-      0
+      1000
     end
   end
 end
