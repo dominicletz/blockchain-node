@@ -35,7 +35,7 @@ The [PBC (Pairing-Based Cryptography)](https://crypto.stanford.edu/pbc/) library
 $ cd ~/Downloads
 $ wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
 $ tar -xvzf pbc-0.5.14.tar.gz
-$ cd pbc-0.5.14.tar.gz
+$ cd pbc-0.5.14
 $ ./configure
 $ make
 $ make install
@@ -60,10 +60,13 @@ $ mix deps.get
 From the `blockchain-node` project directory run:
 
 ```
-$ iex -S mix
+$ ./run.sh
 ```
 
-You should now be able to access the API on `localhost:4001`
+When you see a line that says "Interactive Elixir", the node is running and you should now be able to access the API on `localhost:4001`.
+
+## Stopping
+To stop the node, press Ctrl+C twice to exit.
 
 ## Installation
 
