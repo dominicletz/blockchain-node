@@ -62,8 +62,18 @@ defmodule BlockchainNode.Accounts do
       {:ok, private_key, _public_key} ->
         from = address_bin(from_address)
         to = address_bin(to_address)
-
         :blockchain_node_worker.payment_txn(private_key, from, to, amount)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def add_gateway(from_address, gw_address) do
+    add_gateway(from_address, gw_address, :nil)
+  end
+  def add_gateway(from_address, gw_address, password) do
+    case load_keys(from_address, password) do
+      {:ok, private_key, _public_key} ->
+            :blockchain_node_worker.add_gateway_txn(private_key, gw_address)
       {:error, reason} -> {:error, reason}
     end
   end
@@ -160,7 +170,9 @@ defmodule BlockchainNode.Accounts do
 
   defp get_balance(address) do
     if is_connected?() do
-      :blockchain_node_worker.balance(address_bin(address))
+      address
+      |> :blockchain_ledger.find_entry(:blockchain_node_worker.ledger())
+      |> :blockchain_ledger.balance()
     else
       1000
     end

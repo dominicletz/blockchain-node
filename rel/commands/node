@@ -1,0 +1,11 @@
+#!/bin/sh
+
+case $1 in
+    help)
+        echo "$0 info"
+        exit 0
+        ;;
+    height)
+        release_remote_ctl rpc ":blockchain_console.height()"
+        ;;
+esac

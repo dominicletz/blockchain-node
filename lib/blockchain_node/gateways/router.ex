@@ -6,7 +6,7 @@ defmodule BlockchainNode.Gateways.Router do
   plug :dispatch
 
   get "/" do
-    send_resp(conn, 200, Poison.encode!(Gateways.list()))
+    send_resp(conn, 200, Poison.encode!(Gateways.get_all()))
   end
 
   get "/:address" do

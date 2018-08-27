@@ -5,7 +5,7 @@ defmodule BlockchainNode.MixProject do
     [
       app: :blockchain_node,
       version: "0.1.0",
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -15,19 +15,18 @@ defmodule BlockchainNode.MixProject do
   def application do
     [
       extra_applications: [:logger, :gpb, :intercept, :rand_compat],
-      mod: {BlockchainNode.Application, []},
-      env: [port: 0]
+      mod: {BlockchainNode.Application, []}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:distillery, github: "allenan/distillery", branch: "spaces", runtime: false},
-      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "aa/wallet-functionality"},
-      {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "otp21", override: true},
-      {:lager, ~r/.*/, env: :prod, git: "https://github.com/erlang-lager/lager.git", branch: "adt/sys-trace-func", manager: :rebar3, override: true},
+      {:distillery, "~> 2.0"},
+      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "adt/test-proxy"},
+      {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "modernize", override: true},
       {:cowboy, "~> 1.0.0"},
+      {:lager, "~> 3.6", override: true},
       {:plug, "~> 1.0"},
       {:poison, "~> 3.1"}
     ]

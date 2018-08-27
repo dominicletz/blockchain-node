@@ -24,7 +24,7 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 blockchain_node-*.tar
 
-/rel/
 /log/
 /data/
 /package/
+*.block

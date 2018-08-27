@@ -28,19 +28,6 @@ $ brew install autoconf automake wget yasm gmp libtool
 $ brew install elixir
 ```
 
-### Pairing-Based Cryptography
-The [PBC (Pairing-Based Cryptography)](https://crypto.stanford.edu/pbc/) library is a free C library (released under the GNU Lesser General Public License) built on the GMP library that performs the mathematical operations underlying pairing-based cryptosystems.
-
-```
-$ cd ~/Downloads
-$ wget https://crypto.stanford.edu/pbc/files/pbc-0.5.14.tar.gz
-$ tar -xvzf pbc-0.5.14.tar.gz
-$ cd pbc-0.5.14
-$ ./configure
-$ make
-$ make install
-```
-
 ### Clone blockchain-node
 
 Clone the `blockchain-node` project somewhere.
@@ -49,24 +36,34 @@ Clone the `blockchain-node` project somewhere.
 $ git clone git@github.com:helium/blockchain-node.git
 ```
 
-### Install Mix Deps
+### Building interactively
 `cd` into the `blockchain-node` project and then run:
 
 ```
-$ mix deps.get
+$ make
+$ iex -S mix
 ```
 
-## Running
+### Building a dev release
+`cd` into the `blockchain-node` project and then run:
+
+```
+$ make devrel
+```
+
+### Running the dev release
 From the `blockchain-node` project directory run:
 
 ```
-$ ./run.sh
+$ make devrel && make startdevrel
 ```
 
-When you see a line that says "Interactive Elixir", the node is running and you should now be able to access the API on `localhost:4001`.
+### Stopping the dev release
+From the `blockchain-node` project directory run:
 
-## Stopping
-To stop the node, press Ctrl+C twice to exit.
+```
+$ make stopdevrel
+```
 
 ## Installation
 

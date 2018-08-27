@@ -13,15 +13,12 @@ defmodule BlockchainNode.Application do
 
     :pg2.create(:websocket_connections)
 
-    swarm_config = [{:libp2p_group_gossip,
-      [{:stream_client, {"blockchain_gossip/1.0.0", {:blockchain_gossip_handler, []}}}]
-    }]
-
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
-      Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch]),
-      worker(BlockchainNode.Watcher, [])
+      Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch()]),
+      worker(BlockchainNode.Watcher, []),
+      worker(BlockchainNode.Gateways, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
