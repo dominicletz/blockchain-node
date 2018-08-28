@@ -161,20 +161,13 @@ defmodule BlockchainNode.Accounts do
     end
   end
 
-  defp is_connected? do
-    case :blockchain_node_worker.state do
-      {:state, :undefined, _, _, _, _} -> false
-      _ -> true
-    end
-  end
-
   defp get_balance(address) do
-    if is_connected?() do
-      address
-      |> :blockchain_ledger.find_entry(:blockchain_node_worker.ledger())
-      |> :blockchain_ledger.balance()
-    else
-      1000
+    case :blockchain_node_worker.ledger() do
+      :undefined -> 0
+      ledger ->
+        address
+        |> :blockchain_ledger.find_entry(ledger)
+        |> :blockchain_ledger.balance()
     end
   end
 end
