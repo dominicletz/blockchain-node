@@ -24,6 +24,7 @@ defmodule BlockchainNode.MixProject do
     [
       {:distillery, "~> 2.0"},
       {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "adt/test-proxy"},
+      {:cuttlefish, git: "git@github.com:helium/cuttlefish.git", branch: "develop", override: true},
       {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "modernize", override: true},
       {:cowboy, "~> 1.0.0"},
       {:lager, "~> 3.6", override: true},
