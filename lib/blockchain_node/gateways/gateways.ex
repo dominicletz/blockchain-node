@@ -17,6 +17,15 @@ defmodule BlockchainNode.Gateways do
     Agent.get(@me, fn state -> state end)
   end
 
+  def get_paginated(page, rowsPerPage) do
+    page = String.to_integer(page)
+    rowsPerPage = String.to_integer(rowsPerPage)
+
+    Agent.get(@me, fn state ->
+      %{ entries: Enum.slice(state, page * rowsPerPage, rowsPerPage), totalEntries: Enum.count(state) }
+    end)
+  end
+
   def get_random_address() do
     [gw] = Agent.get(@me, fn state -> state end) |> Enum.take_random(1)
     gw.address
