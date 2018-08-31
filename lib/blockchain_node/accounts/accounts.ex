@@ -166,6 +166,8 @@ defmodule BlockchainNode.Accounts do
       :undefined -> 0
       ledger ->
         address
+        |> to_charlist()
+        |> :libp2p_crypto.b58_to_address()
         |> :blockchain_ledger.find_entry(ledger)
         |> :blockchain_ledger.balance()
     end
