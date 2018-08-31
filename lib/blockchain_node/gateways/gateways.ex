@@ -43,6 +43,15 @@ defmodule BlockchainNode.Gateways do
     gw.address
   end
 
+  def get_coverage(resolution, {_sw, _ne} = bounds) do
+    gateways = Agent.get(@me, fn state -> state end)
+
+    gateways
+    |> Enum.filter(fn g -> within_bounds({g.lat, g.lng}, bounds)  end)
+    |> Enum.map(fn g -> geo_to_h3({g.lat, g.lng}, resolution) end)
+    |> Enum.reduce(%{}, fn l, acc -> Map.update(acc, l, 1, &(&1 + 1)) end)
+  end
+
   defp get_coordinate_list do
     {:ok, [list]} = Application.app_dir(:blockchain_node, "priv")
                     |> Path.join("fandf_coordinates.txt")
@@ -56,14 +65,14 @@ defmodule BlockchainNode.Gateways do
                      fn {lat, long}=coordinate, acc ->
                        {address, pubkey} = generate_key()
                        [%Gateway{
-                         address: address,
+                         address: address |> to_string(),
                          public_key: "none",
                          status: generate_status(),
                          blocks_mined: nil,
                          type: "owned",
                          lat: lat,
                          lng: long,
-                         location: :h3.from_geo(coordinate, 13)
+                         location: geo_to_h3(coordinate, 13)
                        } | acc]
                      end)
   end
@@ -100,5 +109,15 @@ defmodule BlockchainNode.Gateways do
   # XXX: definitely YOLO
   defp generate_status do
     Enum.random(~w(active active active inactive concensus))
+  end
+
+  defp geo_to_h3({_lat, _lng} = coordinates, resolution) do
+    :h3.from_geo(coordinates, resolution) |> :h3.to_string() |> to_string()
+  end
+
+  defp within_bounds({lat, lng}, {{sw_lat, sw_lng}, {ne_lat, ne_lng}}) do
+    lngInBounds = (lng - ne_lng) * (lng - sw_lng) < 0
+    latInBounds = (lat - ne_lat) * (lat - sw_lat) < 0
+    lngInBounds && latInBounds
   end
 end
