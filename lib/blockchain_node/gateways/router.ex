@@ -9,8 +9,15 @@ defmodule BlockchainNode.Gateways.Router do
   plug :dispatch
 
   get "/" do
-    %{ "page" => page, "rowsPerPage" => rowsPerPage } = conn.query_params
-    send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(page, rowsPerPage)))
+    case conn.query_params do
+      %{ "page" => page, "per_page" => per_page } ->
+        page = String.to_integer(page)
+        per_page = String.to_integer(per_page)
+
+        send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(page, per_page)))
+      _ ->
+        send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(0, 10)))
+    end
   end
 
   get "/coverage" do

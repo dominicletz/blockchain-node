@@ -17,12 +17,14 @@ defmodule BlockchainNode.Gateways do
     Agent.get(@me, fn state -> state end)
   end
 
-  def get_paginated(page, rowsPerPage) do
-    page = String.to_integer(page)
-    rowsPerPage = String.to_integer(rowsPerPage)
-
+  def get_paginated(page, per_page) do
     Agent.get(@me, fn state ->
-      %{ entries: Enum.slice(state, page * rowsPerPage, rowsPerPage), totalEntries: Enum.count(state) }
+      %{
+        entries: Enum.slice(state, page * per_page, per_page),
+        total: Enum.count(state),
+        page: page,
+        per_page: per_page
+      }
     end)
   end
 
@@ -46,6 +48,7 @@ defmodule BlockchainNode.Gateways do
 
   def get_coverage(resolution, {_sw, _ne} = bounds) do
     gateways = Agent.get(@me, fn state -> state end)
+    resolution = min(resolution, 9)
 
     gateways
     |> Enum.filter(fn g -> within_bounds({g.lat, g.lng}, bounds)  end)
