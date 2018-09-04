@@ -32,8 +32,9 @@ defmodule BlockchainNode.Gateways do
   end
 
   def get_location(address) do
+    ## NOTE: address comes in as an atom, hence the conversion to string below
     gw = Agent.get(@me, fn state -> state end)
-         |> Enum.find(fn gw -> gw.address == address end)
+         |> Enum.find(fn gw -> gw.address == to_string(address) end)
     gw.location
   end
 
