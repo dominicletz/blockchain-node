@@ -5,6 +5,6 @@ case $1 in
         release_remote_ctl rpc "BlockchainNode.Accounts.add_gateway('$2', '$3')"
         ;;
     assert_location)
-        release_remote_ctl rpc "BlockchainNode.Gateways.assert_location('$2', '$3', $4)"
+        release_remote_ctl rpc "BlockchainNode.Gateways.assert_location('$2', '$3', '$4')"
         ;;
 esac
