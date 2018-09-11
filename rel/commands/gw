@@ -2,9 +2,9 @@
 
 case $1 in
     get_random)
-        release_remote_ctl rpc "BlockchainNode.Gateways.get_random_address()"
+        release_remote_ctl rpc "BlockchainNode.CLI.get_random_address()"
         ;;
     get_location)
-        release_remote_ctl rpc "BlockchainNode.Gateways.get_location('$2')"
+        release_remote_ctl rpc "BlockchainNode.CLI.get_location(\"$2\")"
         ;;
 esac

@@ -87,7 +87,9 @@ defmodule BlockchainNode.Gateways do
   def assert_location(from_address, gw_address, gw_location, password) do
     case Accounts.load_keys(from_address, password) do
       {:ok, private_key, _public_key} ->
-            :blockchain_node_worker.assert_location_txn(private_key, gw_address, gw_location)
+        :blockchain_node_worker.assert_location_txn(private_key,
+          :libp2p_crypto.b58_to_address(~c(#{gw_address})),
+          :h3.from_string(~c(#{gw_location})))
       {:error, reason} -> {:error, reason}
     end
   end

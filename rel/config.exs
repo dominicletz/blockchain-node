@@ -37,7 +37,9 @@ environment :dev do
     node: "rel/commands/node",
     genesis: "rel/commands/genesis",
     txn: "rel/commands/txn",
-    gw: "rel/commands/gw"
+    gw: "rel/commands/gw",
+    account: "rel/commands/account",
+    ledger: "rel/commands/ledger"
   ]
 end
 
@@ -50,7 +52,9 @@ environment :prod do
     node: "rel/commands/node",
     genesis: "rel/commands/genesis",
     txn: "rel/commands/txn",
-    gw: "rel/commands/gw"
+    gw: "rel/commands/gw",
+    account: "rel/commands/account",
+    ledger: "rel/commands/ledger"
   ]
 end
 

@@ -73,7 +73,7 @@ defmodule BlockchainNode.Accounts do
   def add_gateway(from_address, gw_address, password) do
     case load_keys(from_address, password) do
       {:ok, private_key, _public_key} ->
-            :blockchain_node_worker.add_gateway_txn(private_key, gw_address)
+            :blockchain_node_worker.add_gateway_txn(private_key, :libp2p_crypto.b58_to_address(~c(#{from_address})), :libp2p_crypto.b58_to_address(~c(#{gw_address})))
       {:error, reason} -> {:error, reason}
     end
   end

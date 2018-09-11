@@ -1,0 +1,10 @@
+#!/bin/sh
+
+case $1 in
+    create)
+        release_remote_ctl rpc "BlockchainNode.CLI.create_account()"
+        ;;
+    create_secure)
+        release_remote_ctl rpc "BlockchainNode.CLI.create_secure_account(\"$2\")"
+        ;;
+esac

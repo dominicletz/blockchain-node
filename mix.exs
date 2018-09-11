@@ -23,9 +23,10 @@ defmodule BlockchainNode.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "adt/test-proxy"},
-      {:cuttlefish, git: "git@github.com:helium/cuttlefish.git", branch: "develop", override: true},
-      {:bitcask, git: "git@github.com:helium/bitcask.git", branch: "modernize", override: true},
+      {:blockchain, git: "git@github.com:helium/blockchain.git", branch: "rg/add-gw"},
+      {:erlang_ubx, git: "https://github.com/helium/erlang-ubx.git", branch: "master", override: true, app: false},
+      {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
+      {:bitcask, git: "https://github.com/helium/bitcask.git", branch: "modernize", override: true},
       {:cowboy, "~> 1.0.0"},
       {:lager, "~> 3.6", override: true},
       {:plug, "~> 1.0"},

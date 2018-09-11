@@ -2,6 +2,7 @@
 
 rm -rf data
 rm -rf log
-rm -rf _build/dev/rel
+rm -rf _build/dev
 rm -rf *genesis.block
-iex -S mix
+mix clean && mix deps.update --all
+make clean && make devrelease
