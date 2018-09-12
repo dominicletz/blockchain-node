@@ -101,15 +101,25 @@ defmodule BlockchainNode.Gateways do
     {:ok, _private_key, public_key} = BlockchainNode.Accounts.load_keys(owner_address, password)
     address = :libp2p_crypto.pubkey_to_address(public_key)
 
-    token = case get_registration_token(address) do
+    case get_registration_token(address) do
       nil ->
-        :crypto.strong_rand_bytes(32) |> put_registration_token(address)
+        :crypto.strong_rand_bytes(32)
+        |> Base.encode64()
+        |> put_registration_token(address)
 
       existing_token ->
         existing_token.token
     end
+  end
 
-    address <> token
+  def validate_registration_token(token) do
+    if get_registration_token(token) do
+      # TODO check block height
+      delete_registration_token(token)
+      true
+    else
+      false
+    end
   end
 
   defp put_registration_token(token, address) do
