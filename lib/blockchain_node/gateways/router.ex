@@ -1,7 +1,7 @@
 defmodule BlockchainNode.Gateways.Router do
   use Plug.Router
   alias BlockchainNode.Gateways
-  alias BlockchainNode.Worker
+  alias BlockchainNode.Networking
 
   plug :match
   plug Plug.Parsers, parsers: [:json],
@@ -32,8 +32,7 @@ defmodule BlockchainNode.Gateways.Router do
     send_resp(conn, 200, Poison.encode!(%{
       token: Gateways.registration_token(address, password),
       owner: address,
-      # addr: Worker.get_swarm_addr() # TODO use this
-      addr: "/ip4/64.71.9.226/tcp/61069" # TODO temporary
+      addr: Networking.listen_addr()
     }))
   end
 
