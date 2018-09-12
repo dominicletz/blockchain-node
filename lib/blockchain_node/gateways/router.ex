@@ -20,6 +20,19 @@ defmodule BlockchainNode.Gateways.Router do
     end
   end
 
+  post "/:address/registration_token" do
+    params = conn.body_params
+    password = if params["password"] == "" do
+      nil
+    else
+      params["password"]
+    end
+
+    send_resp(conn, 200, Poison.encode!(%{
+      token: Gateways.registration_token(address, password) |> Base.encode64()
+    }))
+  end
+
   get "/coverage" do
     %{
       "res" => resolution,
