@@ -8,7 +8,8 @@ defmodule BlockchainNode.Accounts do
 
   def list do
     File.mkdir_p(keys_dir())
-    with {:ok, files} <- File.ls(keys_dir()) do
+    with {:ok, files} <- File.ls(keys_dir()),
+         files = Enum.filter(files, fn f -> String.length(f) >= 50 end) do
       for address <- files, do: load_account(address)
     end
   end
