@@ -1,7 +1,7 @@
 defmodule BlockchainNode.Accounts do
   alias BlockchainNode.Accounts.Account
   alias BlockchainNode.Crypto
-
+  
   def keys_dir do
     "#{System.user_home()}/.helium/keys"
   end

@@ -6,6 +6,7 @@ defmodule BlockchainNode.Watcher do
 
   use GenServer
   alias BlockchainNode.Accounts
+  alias BlockchainNode.Accounts.AccountTransactions
   alias BlockchainNode.Explorer
 
   def start_link do
@@ -25,6 +26,8 @@ defmodule BlockchainNode.Watcher do
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->
           send pid, Poison.encode!(payload(currentHeight))
         end
+
+        AccountTransactions.update_transactions_state()
       end
 
       schedule_work() # Reschedule once more

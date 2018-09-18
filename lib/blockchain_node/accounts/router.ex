@@ -1,6 +1,7 @@
 defmodule BlockchainNode.Accounts.Router do
   use Plug.Router
   alias BlockchainNode.Accounts
+  alias BlockchainNode.Accounts.AccountTransactions
 
   plug :match
   plug Plug.Parsers, parsers: [:json],
@@ -10,6 +11,10 @@ defmodule BlockchainNode.Accounts.Router do
 
   get "/" do
     send_resp(conn, 200, Poison.encode!(Accounts.list()))
+  end
+
+  get "/:address/transactions" do
+    send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address)))
   end
 
   get "/:address" do
