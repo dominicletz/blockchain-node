@@ -48,21 +48,67 @@ $ iex -S mix
 `cd` into the `blockchain-node` project and then run:
 
 ```
-$ make devrel
+$ make devrelease
 ```
 
-### Running the dev release
-From the `blockchain-node` project directory run:
+Note: A devrelease is not connected to the seed nodes, you need to have a local blockchain running
+
+### Building a prod release
+`cd` into the `blockchain-node` project and then run:
 
 ```
-$ make devrel && make startdevrel
+$ make release
 ```
 
-### Stopping the dev release
-From the `blockchain-node` project directory run:
-
+### Starting a dev release
+In background mode:
 ```
-$ make stopdevrel
+$ _build/dev/rel/blockchain_node/bin/blockchain_node start
+```
+
+In foreground mode:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node foreground
+```
+
+In console mode:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node console
+```
+
+### Starting a prod release
+In background mode:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node start
+```
+
+In foreground mode:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node foreground
+```
+
+In console mode:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node console
+```
+
+### Connecting to a miner on the blockchain
+For dev release:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+```
+
+For prod release:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+```
+Note: a prod release would ideally be connected to the seed nodes since they are pre-configured
+
+### Loading a genesis block
+
+For dev release:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node genesis load <full_path_to_genesis_block_file>
 ```
 
 ## Installation
