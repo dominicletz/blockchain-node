@@ -1,34 +1,6 @@
 #!/bin/sh
 
-case $1 in
-    disconnect)
-        release_remote_ctl rpc ":blockchain_console.peer_disconnect('$2')"
-        ;;
-    in_consensus)
-        release_remote_ctl rpc ":blockchain_console.peer_in_consensus()"
-        ;;
-    pay)
-        release_remote_ctl rpc ":blockchain_console.peer_pay('$2', $3)"
-        ;;
-    balance)
-        release_remote_ctl rpc ":blockchain_console.peer_balance()"
-        ;;
-    gossip_peers)
-        release_remote_ctl rpc ":blockchain_console.gossip_peers()"
-        ;;
-    ledger)
-        release_remote_ctl rpc ":blockchain_console.peer_ledger()"
-        ;;
-    relcast_info)
-        release_remote_ctl rpc ":blockchain_console.relcast_info()"
-        ;;
-    relcast_queue)
-        release_remote_ctl rpc ":blockchain_console.relcast_queue()"
-        ;;
-    *)
-        if [ -t 0 ] ; then
-            export CLIQUE_COLUMNS=`stty size | cut -d ' ' -f 2`
-        fi
-        release_remote_ctl rpc --mfa 'BlockchainNode.CLI.peer_clique_command/1' --argv -- peer $@
-        ;;
-esac
+if [ -t 0 ] ; then
+    export CLIQUE_COLUMNS=`stty size | cut -d ' ' -f 2`
+fi
+release_remote_ctl rpc --mfa 'BlockchainNode.CLI.clique_command/1' --argv -- peer $@

@@ -18,7 +18,31 @@ use Mix.Config
 #
 # You can also configure a 3rd-party app:
 #
-#     config :logger, level: :info
+config :logger,
+backends: [
+  {LoggerFileBackend, :info_log},
+  {LoggerFileBackend, :error_log},
+  {LoggerFileBackend, :debug_log}
+]
+
+config :logger,
+  :info_log,
+  path: "log/info.log",
+  lever: :info,
+  format: "$time [$level] $message\n"
+
+config :logger,
+  :error_log,
+  path: "log/error.log",
+  lever: :error,
+  format: "$time [$level] $message\n"
+
+config :logger,
+  :debug_log,
+  path: "log/debug.log",
+  lever: :debug,
+  format: "$time [$level] $message\n"
+
 #
 
 # It is also possible to import configuration files, relative to this

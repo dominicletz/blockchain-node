@@ -1,7 +1,7 @@
 defmodule BlockchainNode.Accounts do
   alias BlockchainNode.Accounts.Account
   alias BlockchainNode.Crypto
-  
+
   def keys_dir do
     "#{System.user_home()}/.helium/keys"
   end
@@ -63,18 +63,7 @@ defmodule BlockchainNode.Accounts do
       {:ok, private_key, _public_key} ->
         from = address_bin(from_address)
         to = address_bin(to_address)
-        :blockchain_node_worker.payment_txn(private_key, from, to, amount)
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
-  def add_gateway(from_address, gw_address) do
-    add_gateway(from_address, gw_address, :nil)
-  end
-  def add_gateway(from_address, gw_address, password) do
-    case load_keys(from_address, password) do
-      {:ok, private_key, _public_key} ->
-            :blockchain_node_worker.add_gateway_txn(private_key, :libp2p_crypto.b58_to_address(~c(#{from_address})), :libp2p_crypto.b58_to_address(~c(#{gw_address})))
+        :blockchain_worker.payment_txn(private_key, from, to, amount)
       {:error, reason} -> {:error, reason}
     end
   end
@@ -163,7 +152,7 @@ defmodule BlockchainNode.Accounts do
   end
 
   defp get_balance(address) do
-    case :blockchain_node_worker.ledger() do
+    case :blockchain_worker.ledger() do
       :undefined -> 0
       ledger ->
         address

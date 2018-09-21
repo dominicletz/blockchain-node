@@ -1,7 +1,7 @@
 defmodule BlockchainNode.Explorer do
 
   def list_accounts do
-    case :blockchain_node_worker.ledger do
+    case :blockchain_worker.ledger do
       :undefined -> []
       ledger ->
         for {k, {:entry, nonce, balance}} <- ledger do

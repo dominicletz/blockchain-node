@@ -6,44 +6,10 @@ defmodule BlockchainNode.CLI do
     |> Enum.map(&String.to_charlist/1)
   end
 
-  def peer_clique_command(list) do
+  def clique_command(list) do
     list
     |> to_chars()
     |> :blockchain_console.command()
-  end
-
-  def ledger_clique_command(list) do
-    list
-    |> to_chars()
-    |> :blockchain_console.command()
-  end
-
-  def add_gateway(owner_address, gateway_address) do
-    BlockchainNode.Accounts.add_gateway(owner_address, gateway_address)
-  end
-
-  def assert_location(owner_address, gateway_address, location) do
-    BlockchainNode.Gateways.assert_location(owner_address, gateway_address, location)
-  end
-
-  def assert_location(owner_address, gateway_address, location, password) do
-    BlockchainNode.Gateways.assert_location(owner_address, gateway_address, location, password)
-  end
-
-  def get_random_address() do
-    BlockchainNode.Gateways.get_random_address
-  end
-
-  def get_location(gateway_addr) do
-    BlockchainNode.Gateways.get_location(gateway_addr)
-  end
-
-  def load_genesis_block(block) do
-    :blockchain_console.load_genesis_block(block)
-  end
-
-  def height() do
-    :blockchain_console.height()
   end
 
   def create_account() do
@@ -52,5 +18,22 @@ defmodule BlockchainNode.CLI do
 
   def create_secure_account(password) do
     BlockchainNode.Accounts.create(password)
+  end
+
+  def load_genesis(genesis_file) do
+    case File.read(genesis_file) do
+      {:ok, genesis_block} ->
+        :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(genesis_block))
+      {:error, reason} ->
+        IO.inspect("Error, reason: #{reason}")
+        {:error, reason}
+    end
+  end
+
+  def height() do
+    case :blockchain_worker.height() do
+      :undefined -> "undefined"
+      h -> h
+    end
   end
 end

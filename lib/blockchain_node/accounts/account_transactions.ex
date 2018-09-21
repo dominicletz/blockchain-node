@@ -1,6 +1,7 @@
 defmodule BlockchainNode.Accounts.AccountTransactions do
   @me __MODULE__
   use Agent
+  require Logger
 
   def start_link() do
     Agent.start_link(&init/0, name: @me)
@@ -19,10 +20,9 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     end
   end
 
-  def update_transactions_state() do
-    { _, last_head_hash } = Agent.get(@me, fn state -> state end)
-
-    case :blockchain_node_worker.blocks(0, last_head_hash) do
+  def update_transactions_state(last_head_hash) do
+    Logger.info("last_head_hash: #{last_head_hash}")
+    case :blockchain_worker.blocks(last_head_hash) do
       {:ok, blocks} ->
         new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
         Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks(blocks, txns_map, new_head_hash) end)

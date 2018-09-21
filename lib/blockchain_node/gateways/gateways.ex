@@ -84,19 +84,6 @@ defmodule BlockchainNode.Gateways do
                      end)
   end
 
-  def assert_location(from_address, gw_address, gw_location) do
-    assert_location(from_address, gw_address, gw_location, :nil)
-  end
-  def assert_location(from_address, gw_address, gw_location, password) do
-    case Accounts.load_keys(from_address, password) do
-      {:ok, private_key, _public_key} ->
-        :blockchain_node_worker.assert_location_txn(private_key,
-          :libp2p_crypto.b58_to_address(~c(#{gw_address})),
-          :h3.from_string(~c(#{gw_location})))
-      {:error, reason} -> {:error, reason}
-    end
-  end
-
   def registration_token(owner_address, password) do
     {:ok, _private_key, public_key} = BlockchainNode.Accounts.load_keys(owner_address, password)
     address = :libp2p_crypto.pubkey_to_address(public_key)
@@ -124,7 +111,7 @@ defmodule BlockchainNode.Gateways do
 
   defp put_registration_token(token, address) do
     # TODO: handle not connected case
-    currentHeight = :blockchain_node_worker.height
+    currentHeight = :blockchain_worker.height
     Agent.update(@me, fn %{registration_tokens: tokens} = state ->
       %{state | registration_tokens: [%{token: token, height: currentHeight, address: address} | tokens]}
     end)

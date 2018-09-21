@@ -13,10 +13,23 @@ defmodule BlockchainNode.Application do
 
     :pg2.create(:websocket_connections)
 
+    # Blockchain Supervisor Options
+    {privkey, pubkey} = :libp2p_crypto.generate_keys()
+    sig_fun = :libp2p_crypto.mk_sig_fun(privkey)
+    base_dir = ~c(data)
+    blockchain_opts = [
+      {:key, {pubkey, sig_fun}},
+      {:seed_nodes, []},
+      {:port, 0},
+      {:num_consensus_members, 7},
+      {:base_dir, base_dir},
+    ]
+
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
       Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch()]),
+      supervisor(:blockchain_sup, [blockchain_opts], id: :blockchain_sup, restart: :permanent),
       worker(BlockchainNode.Watcher, []),
       worker(BlockchainNode.Gateways, []),
       worker(BlockchainNode.Accounts.AccountTransactions, [])

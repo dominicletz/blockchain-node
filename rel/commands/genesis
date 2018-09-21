@@ -1,11 +1,10 @@
 #!/bin/sh
-
 case $1 in
     help)
-        echo "$0 create <keys>"
+        echo "$0 load <genesis_block_file>"
         exit 0
         ;;
     load)
-        release_remote_ctl rpc "BlockchainNode.CLI.load_genesis_block(\"$2\")"
+        release_remote_ctl rpc "BlockchainNode.CLI.load_genesis(\"$2\")"
         ;;
 esac

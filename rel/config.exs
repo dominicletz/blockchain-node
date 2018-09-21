@@ -34,12 +34,10 @@ environment :dev do
   set cookie: :"LBa!`4N8Z7%e7r7JgE=BQh19/96_]J&/@h/TK|siYlB_H%Q:O=_JIArJ)Z1zI}sd"
   set commands: [
     peer: "rel/commands/peer",
-    node: "rel/commands/node",
     genesis: "rel/commands/genesis",
-    txn: "rel/commands/txn",
-    gw: "rel/commands/gw",
     account: "rel/commands/account",
-    ledger: "rel/commands/ledger"
+    ledger: "rel/commands/ledger",
+    status: "rel/commands/status"
   ]
 end
 
@@ -49,12 +47,10 @@ environment :prod do
   set cookie: :"H7{?G=*nU`91Afps`kmD5OC8SDJ__gCkilnCn=B2NQ%hAtU3>Fn86j(,r|hM_tW/"
   set commands: [
     peer: "rel/commands/peer",
-    node: "rel/commands/node",
     genesis: "rel/commands/genesis",
-    txn: "rel/commands/txn",
-    gw: "rel/commands/gw",
     account: "rel/commands/account",
-    ledger: "rel/commands/ledger"
+    ledger: "rel/commands/ledger",
+    status: "rel/commands/status"
   ]
 end
 

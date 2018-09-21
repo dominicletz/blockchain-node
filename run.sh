@@ -5,4 +5,4 @@ rm -rf log
 rm -rf _build/dev
 rm -rf *genesis.block
 mix clean && mix deps.update --all
-make clean && make devrelease
+make clean && make && make devrelease

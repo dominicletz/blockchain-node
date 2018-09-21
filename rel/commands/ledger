@@ -1,10 +1,6 @@
 #!/bin/sh
 
-case $1 in
-    *)
-        if [ -t 0 ] ; then
-            export CLIQUE_COLUMNS=`stty size | cut -d ' ' -f 2`
-        fi
-        release_remote_ctl rpc --mfa 'BlockchainNode.CLI.ledger_clique_command/1' --argv -- ledger $@
-        ;;
-esac
+if [ -t 0 ] ; then
+    export CLIQUE_COLUMNS=`stty size | cut -d ' ' -f 2`
+fi
+release_remote_ctl rpc --mfa 'BlockchainNode.CLI.clique_command/1' --argv -- ledger $@
