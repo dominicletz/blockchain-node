@@ -23,7 +23,7 @@ defmodule BlockchainNode.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "rg/txn-handler"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:libp2p, git: "https://github.com/helium/erlang-libp2p.git", branch: "master"},
       {:erlang_ubx, git: "https://github.com/helium/erlang-ubx.git", branch: "master", override: true, app: false},
