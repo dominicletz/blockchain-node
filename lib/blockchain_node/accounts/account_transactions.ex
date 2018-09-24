@@ -47,11 +47,11 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     payment_txns_map = Enum.reduce(Enum.reverse(txns_by_height_list), state, fn { txns_in_block, height }, acc1 ->
       Enum.reduce(txns_in_block, acc1, fn txn, acc2 ->
         payer = txn
-          |> :blockchain_transaction.payer()
+          |> :blockchain_txn_payment.payer()
           |> :libp2p_crypto.address_to_b58()
           |> to_string()
         payee = txn
-          |> :blockchain_transaction.payee()
+          |> :blockchain_txn_payment.payee()
           |> :libp2p_crypto.address_to_b58()
           |> to_string()
 
@@ -63,8 +63,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                   %{
                     payer: payer,
                     payee: payee,
-                    amount: :blockchain_transaction.amount(txn),
-                    payment_nonce: :blockchain_transaction.payment_nonce(txn),
+                    amount: :blockchain_txn_payment.amount(txn),
+                    payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height
                   } | list
                 ]
@@ -75,8 +75,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                   %{
                     payer: payer,
                     payee: payee,
-                    amount: :blockchain_transaction.amount(txn),
-                    payment_nonce: :blockchain_transaction.payment_nonce(txn),
+                    amount: :blockchain_txn_payment.amount(txn),
+                    payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height
                   }
                 ]
