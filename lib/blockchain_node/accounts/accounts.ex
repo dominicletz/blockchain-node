@@ -1,5 +1,6 @@
 defmodule BlockchainNode.Accounts do
   alias BlockchainNode.Accounts.Account
+  alias BlockchainNode.Accounts.AccountTransactions
   alias BlockchainNode.Crypto
 
   def keys_dir do
@@ -7,10 +8,15 @@ defmodule BlockchainNode.Accounts do
   end
 
   def list do
+    files = get_account_keys()
+    for address <- files, do: load_account(address)
+  end
+
+  def get_account_keys do
     File.mkdir_p(keys_dir())
     with {:ok, files} <- File.ls(keys_dir()),
          files = Enum.filter(files, fn f -> String.length(f) >= 50 end) do
-      for address <- files, do: load_account(address)
+      files
     end
   end
 
@@ -56,6 +62,7 @@ defmodule BlockchainNode.Accounts do
     File.mkdir_p(keys_dir())
     filename = to_filename(address)
     File.rm(filename)
+    AccountTransactions.update_transactions_state({ :delete, address })
   end
 
   def pay(from_address, to_address, amount, password) do

@@ -13,8 +13,28 @@ defmodule BlockchainNode.Accounts.Router do
     send_resp(conn, 200, Poison.encode!(Accounts.list()))
   end
 
+  get "/transactions" do
+    case conn.query_params do
+      %{ "page" => page, "per_page" => per_page } ->
+        page = String.to_integer(page)
+        per_page = String.to_integer(per_page)
+
+        send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(page, per_page)))
+      _ ->
+        send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(0, 10)))
+    end
+  end
+
   get "/:address/transactions" do
-    send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address)))
+    case conn.query_params do
+      %{ "page" => page, "per_page" => per_page } ->
+        page = String.to_integer(page)
+        per_page = String.to_integer(per_page)
+
+        send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, page, per_page)))
+      _ ->
+        send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, 0, 10)))
+    end
   end
 
   get "/:address" do

@@ -34,7 +34,7 @@ defmodule BlockchainNode.Watcher do
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->
           send pid, Poison.encode!(payload(current_height))
         end
-        # AccountTransactions.update_transactions_state(hash)
+        AccountTransactions.update_transactions_state()
         {:noreply, %{height: current_height}}
       false ->
         {:noreply, state}
