@@ -28,3 +28,4 @@ blockchain_node-*.tar
 /data/
 /package/
 *.block
+/latest/
