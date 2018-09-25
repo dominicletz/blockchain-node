@@ -1,4 +1,6 @@
 language: elixir
+elixir: '1.7.3'
+otp_release: '21.0.4'
 os:
   - osx
 osx_image: xcode9.2
