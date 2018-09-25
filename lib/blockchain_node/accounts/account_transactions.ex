@@ -10,7 +10,16 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
   end
 
   def init() do
-    { %{}, :undefined }
+    case :blockchain_worker.blockchain() do
+      :undefined -> { %{}, :undefined }
+      _ ->
+        case :blockchain_worker.blocks(:blockchain_worker.genesis_hash()) do
+          {:ok, blocks} ->
+            new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
+            parse_transactions_from_blocks(blocks, %{}, new_head_hash)
+          _ -> { %{}, :undefined }
+        end
+    end
   end
 
   def all_transactions(page, per_page) do
@@ -23,7 +32,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     entries =
       txn_lists
       |> Enum.reduce([], fn (list, acc) -> list ++ acc end)
-      |> Enum.sort(fn (txn1, txn2) -> { txn1.block_height, txn1.nonce, txn1.address } >= { txn2.block_height, txn2.nonce, txn2.address } end)
+      |> Enum.sort(fn (txn1, txn2) -> { txn1.block_height, txn1.payment_nonce, txn1.address } >= { txn2.block_height, txn2.payment_nonce, txn2.address } end)
       |> Enum.slice(page * per_page, per_page)
 
     total =
