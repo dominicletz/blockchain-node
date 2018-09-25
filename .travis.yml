@@ -1,9 +1,18 @@
-language: elixir
-elixir: '1.7.3'
-otp_release: '21.0.4'
-os:
-  - osx
-osx_image: xcode9.2
+matrix:
+  include:
+    - os: linux
+      env: S3_UPLOAD_DIR=node/linux
+      language: elixir
+      elixir: '1.7.3'
+      otp_release: '21.0.4'
+    - os: osx
+      env: S3_UPLOAD_DIR=node/darwin
+      osx_image: xcode9.2
+      language: minimal
+      before_install:
+        - brew update
+        - brew install elixir
+      install: mix local.rebar --force; mix local.hex --force; mix deps.get
 script: make deployable
 deploy:
   provider: s3
@@ -12,5 +21,5 @@ deploy:
   bucket: "helium-wallet"
   region: us-west-2
   skip_cleanup: true
-  upload-dir: node
+  upload-dir: $S3_UPLOAD_DIR
   local_dir: latest
