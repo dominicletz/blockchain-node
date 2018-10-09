@@ -158,7 +158,7 @@ defmodule BlockchainNode.Accounts do
     end
   end
 
-  defp get_balance(address) do
+  def get_balance(address) do
     case :blockchain_worker.ledger() do
       :undefined -> 0
       ledger ->

@@ -11,9 +11,9 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
   def init() do
     case :blockchain_worker.blockchain() do
-      :undefined -> { %{}, :undefined } # no blockchain connected yet
+      :undefined -> { %{}, :undefined }
       _ ->
-        case :blockchain_worker.blocks(:blockchain_worker.genesis_hash()) do # parse all blocks from genesis block up
+        case :blockchain_worker.blocks(:blockchain_worker.genesis_hash()) do
           {:ok, blocks} ->
             new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
 
@@ -34,16 +34,10 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
       txn_lists
       |> Enum.reduce([], fn (list, acc) -> list ++ acc end)
       |> Enum.sort(fn (txn1, txn2) -> { txn1.block_height, txn1.address } >= { txn2.block_height, txn2.address } end)
-      |> Enum.slice(page * per_page, per_page)
-
-    total =
-      txn_lists
-      |> Enum.map(fn list -> Enum.count(list) end)
-      |> Enum.reduce(0, fn (count, acc) -> count + acc end)
 
     %{
-      entries: entries,
-      total: total,
+      entries: Enum.slice(entries, page * per_page, per_page),
+      total: length(entries),
       page: page,
       per_page: per_page
     }
@@ -56,7 +50,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
       {:ok, list} ->
         %{
           entries: Enum.slice(list, page * per_page, per_page),
-          total: Enum.count(list),
+          total: length(list),
           page: page,
           per_page: per_page
         }
@@ -67,6 +61,34 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
           page: page,
           per_page: per_page
         }
+    end
+  end
+
+  def balances_for_address(address, count, time_period) do
+    { payment_txns_map, _ } = Agent.get(@me, fn state -> state end)
+    count = String.to_integer(count)
+    current_time = DateTime.utc_now() |> DateTime.to_unix()
+
+    case Map.fetch(payment_txns_map, address) do
+      {:ok, list} ->
+        case time_period do
+          "day" -> %{
+            times: Enum.map((-1 * count)..0, fn x -> x end),
+            totals: generate_totals_by_day(count, address, list, current_time)
+          }
+          "hour" -> generate_totals_by_hour(count, address, list, current_time)
+        end
+      :error ->
+        case time_period do
+          "day" -> %{
+            times: Enum.map((-1 * count)..0, fn x -> x end),
+            totals: Enum.map((-1 * count)..0, fn _ -> 0 end)
+          }
+          "hour" -> %{
+            times: [-1 * count, 0],
+            totals: [0, 0]
+          }
+        end
     end
   end
 
@@ -97,31 +119,35 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
   end
 
   defp parse_transactions_from_blocks(blocks, state, new_head_hash) do
-    # generate a map of %{ block_height: [payment_txns_in_block] }, ignore blocks with no payments transactions
     txns_by_height_list = Enum.reduce(blocks, [], fn (b, acc) ->
       coinbase_txns = :blockchain_block.coinbase_transactions(b)
       payment_txns = :blockchain_block.payment_transactions(b)
       height = :blockchain_block.height(b)
 
+      time =
+        case Map.fetch(:blockchain_block.meta(b), :block_time) do
+          {:ok, block_time} -> block_time
+          _ -> 1514764800 # 2018 Jan 1st as temp date, change later when network launches!
+        end
+
       cond do
-        length(coinbase_txns) > 0 and length(payment_txns) > 0 -> [ { payment_txns, height, "payment" } | [ { coinbase_txns, height, "coinbase" } | acc ]]
-        length(coinbase_txns) > 0 -> [ { coinbase_txns, height, "coinbase" } | acc ]
-        length(payment_txns) > 0 -> [ { payment_txns, height, "payment" } | acc ]
+        length(coinbase_txns) > 0 and length(payment_txns) > 0 -> [ { payment_txns, height, "payment", time } | [ { coinbase_txns, height, "coinbase", time } | acc ]]
+        length(coinbase_txns) > 0 -> [ { coinbase_txns, height, "coinbase", time } | acc ]
+        length(payment_txns) > 0 -> [ { payment_txns, height, "payment", time } | acc ]
         true -> acc
       end
     end)
 
-    # iterating by ascending block height, generate a map of %{ acct_address: [payment_txns] }
-    payment_txns_map = Enum.reduce(Enum.reverse(txns_by_height_list), state, fn { txns_in_block, height, type }, acc1 ->
+    payment_txns_map = Enum.reduce(Enum.reverse(txns_by_height_list), state, fn { txns_in_block, height, type, time }, acc1 ->
       case type do
-        "coinbase" -> parse_coinbase_transactions(txns_in_block, height, acc1)
-        "payment" -> parse_payment_transactions(txns_in_block, height, acc1)
+        "coinbase" -> parse_coinbase_transactions(txns_in_block, height, time, acc1)
+        "payment" -> parse_payment_transactions(txns_in_block, height, time, acc1)
       end
     end)
     { payment_txns_map, new_head_hash }
   end
 
-  defp parse_coinbase_transactions(txns_in_block, height, acc1) do
+  defp parse_coinbase_transactions(txns_in_block, height, time, acc1) do
     owned_accounts = Accounts.get_account_keys
 
     Enum.reduce(txns_in_block, acc1, fn txn, acc2 ->
@@ -135,7 +161,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
       case Map.fetch(acc2, payee) do
         {:ok, list} ->
           if Enum.any?(owned_accounts, fn x -> x === payee end) do
-            total = Enum.at(list, 0).total + amount
+            total = List.first(list).total + amount
             Map.put(acc2, payee,
               [
                 %{
@@ -143,7 +169,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                   payee: payee,
                   amount: amount,
                   block_height: height,
-                  total: total
+                  total: total,
+                  time: time
                 } | list
               ]
             )
@@ -159,7 +186,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                   payee: payee,
                   amount: amount,
                   block_height: height,
-                  total: amount
+                  total: amount,
+                  time: time
                 }
               ]
             )
@@ -170,7 +198,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     end)
   end
 
-  defp parse_payment_transactions(txns_in_block, height, acc1) do
+  defp parse_payment_transactions(txns_in_block, height, time, acc1) do
     owned_accounts = Accounts.get_account_keys
 
     Enum.reduce(txns_in_block, acc1, fn txn, acc2 ->
@@ -193,7 +221,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                   acct_address === payee -> :blockchain_txn_payment.amount(txn)
                 end
 
-              total = Enum.at(list, 0).total + subtotal
+              total = List.first(list).total + subtotal
 
               Map.put(acc3, acct_address,
                 [
@@ -204,7 +232,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                     amount: :blockchain_txn_payment.amount(txn),
                     payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height,
-                    total: total
+                    total: total,
+                    time: time
                   } | list
                 ]
               )
@@ -215,7 +244,6 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
             if Enum.any?(owned_accounts, fn x -> x === acct_address end) do
               total =
                 cond do
-                  # need to add genesis block transactions and coinbase transactions when blockchain core is ready
                   acct_address === payee -> :blockchain_txn_payment.amount(txn)
                 end
 
@@ -228,7 +256,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                     amount: :blockchain_txn_payment.amount(txn),
                     payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height,
-                    total: total
+                    total: total,
+                    time: time
                   }
                 ]
               )
@@ -237,6 +266,76 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
             end
         end
       end)
+    end)
+  end
+
+  defp generate_totals_by_hour(hours, address, list, latest_time) do
+    in_range_txns = Enum.take_while(list, fn txn -> latest_time - txn.time < hours * 60 * 60 end)
+    earliest_txn = List.last(in_range_txns)
+
+    case earliest_txn do
+      nil ->
+        %{
+          times: [-1 * hours, 0],
+          totals: [Accounts.get_balance(address), Accounts.get_balance(address)]
+        }
+      _ ->
+        times =
+          Enum.map(Enum.reverse(in_range_txns), fn txn ->
+            (latest_time - txn.time) / (60 * 60) * -1
+          end)
+
+        totals =
+          Enum.map(Enum.reverse(in_range_txns), fn txn ->
+            txn.total
+          end)
+
+        earliest_total =
+          cond do
+            earliest_txn.payee === earliest_txn.address -> earliest_txn.total - earliest_txn.amount
+            earliest_txn.payer === earliest_txn.address -> earliest_txn.total + earliest_txn.amount
+          end
+
+        %{
+          times: [ -1 * hours | times ] ++ [0],
+          totals: [ earliest_total | totals ] ++ [Accounts.get_balance(address)]
+        }
+    end
+  end
+
+  defp generate_totals_by_day(days, address, list, latest_time) do
+    in_range_txns = Enum.take_while(list, fn txn -> latest_time - txn.time < days * 24 * 60 * 60 end)
+
+    totals_by_day_map =
+      Enum.reduce(in_range_txns, %{}, fn txn, acc ->
+        time_diff = (latest_time - txn.time) / (24 * 60 * 60)
+        time_diff_in_days = time_diff |> Float.floor() |> round() |> Integer.to_string()
+
+        case Map.fetch(acc, time_diff_in_days) do
+          :error -> Map.put(acc, time_diff_in_days, [txn])
+          {:ok, list} -> Map.put(acc, time_diff_in_days, [txn | list])
+        end
+      end)
+
+    Enum.reduce(0..days, [], fn index, acc ->
+      case Map.fetch(totals_by_day_map, index |> Integer.to_string()) do
+        {:ok, txns_at_index} ->
+          [ List.last(txns_at_index).total | acc ]
+        :error ->
+          if index === 0 do
+            [ Accounts.get_balance(address) | acc ]
+          else
+            case Map.fetch(totals_by_day_map, (index - 1) |> Integer.to_string()) do
+              {:ok, txns_at_prev_index} ->
+                txn = List.first(txns_at_prev_index)
+                cond do
+                  txn.payee === txn.address -> [ txn.total - txn.amount | acc ]
+                  txn.payer === txn.address -> [ txn.total + txn.amount | acc ]
+                end
+              :error -> [ List.first(acc) | acc ]
+            end
+          end
+      end
     end)
   end
 end

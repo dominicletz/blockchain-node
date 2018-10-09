@@ -32,6 +32,8 @@ defmodule BlockchainNode.Accounts.Router do
         per_page = String.to_integer(per_page)
 
         send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, page, per_page)))
+      %{ "count" => count, "time_period" => time_period } ->
+        send_resp(conn, 200, Poison.encode!(AccountTransactions.balances_for_address(address, count, time_period)))
       _ ->
         send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, 0, 10)))
     end
