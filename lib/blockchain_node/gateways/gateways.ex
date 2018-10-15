@@ -67,69 +67,76 @@ defmodule BlockchainNode.Gateways do
   end
 
   defp list(list) do
-    res = List.foldl(list,
-                     [],
-                     fn {lat, long}=coordinate, acc ->
-                       {address, pubkey} = generate_key()
-                       [%Gateway{
-                         address: address |> to_string(),
-                         public_key: "none",
-                         status: generate_status(),
-                         blocks_mined: nil,
-                         type: "owned",
-                         lat: lat,
-                         lng: long,
-                         location: geo_to_h3(coordinate, 13)
-                       } | acc]
-                     end)
+    List.foldl(list,
+      [],
+      fn {lat, long}=coordinate, acc ->
+       {address, _} = generate_key()
+       [%Gateway{
+         address: address |> to_string(),
+         public_key: "none",
+         status: generate_status(),
+         blocks_mined: nil,
+         type: "owned",
+         lat: lat,
+         lng: long,
+         location: geo_to_h3(coordinate, 13)
+       } | acc]
+    end)
   end
 
   def registration_token(owner_address, password) do
-    {:ok, _private_key, public_key} = BlockchainNode.Accounts.load_keys(owner_address, password)
+    {:ok, _private_key, public_key} = Accounts.load_keys(owner_address, password)
     address = :libp2p_crypto.pubkey_to_address(public_key)
 
-    case get_registration_token(address) do
-      nil ->
-        :crypto.strong_rand_bytes(32)
-        |> Base.encode64()
-        |> put_registration_token(address)
-
-      existing_token ->
-        existing_token.token
-    end
+    :crypto.strong_rand_bytes(32)
+    |> Base.encode64(padding: false)
+    |> put_registration_token(address)
   end
 
-  def validate_registration_token(token) do
-    if get_registration_token(token) do
-      # TODO check block height
-      delete_registration_token(token)
-      true
-    else
-      false
-    end
+  def confirm_registration(owner_address, password, token) do
+    {:ok, private_key, _public_key} = Accounts.load_keys(owner_address, password)
+
+    %{ txn: txn } = Agent.get(@me, fn %{registration_tokens: tokens} ->
+      Enum.find(tokens, fn t -> t.token == token end)
+    end)
+
+    sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
+    signed_txn = :blockchain_txn_add_gateway.sign(txn, sig_fun)
+
+    :ok = :blockchain_worker.submit_txn(:txn_add_gateway, signed_txn) # what happens after submission??
+
+    delete_registration_token(token)
   end
 
   defp put_registration_token(token, address) do
     # TODO: handle not connected case
-    currentHeight = :blockchain_worker.height
+    current_height = :blockchain_worker.height
+    current_time = DateTime.utc_now() |> DateTime.to_unix()
     Agent.update(@me, fn %{registration_tokens: tokens} = state ->
-      %{state | registration_tokens: [%{token: token, height: currentHeight, address: address} | tokens]}
+      %{state | registration_tokens: [%{token: token, height: current_height, address: address, time_created: current_time} | tokens]}
     end)
     token
   end
 
-  defp get_registration_token(address) do
+  def get_registration_token(token) do
     Agent.get(@me, fn %{registration_tokens: tokens} ->
-      Enum.find(tokens, fn t -> t.address == address end)
+      Enum.find(tokens, fn t -> t.token == token end)
     end)
   end
 
-  defp delete_registration_token(token) do
+  def add_transaction_to_registration_token(token, txn) do
+    Agent.update(@me, fn %{registration_tokens: tokens} = state ->
+      other_tokens = Enum.filter(tokens, fn t -> t.token != token.token end)
+      updated_token = Map.put(token, :txn, txn)
+      %{state | registration_tokens: [updated_token | other_tokens]}
+    end)
+  end
+
+  def delete_registration_token(token) do
     Agent.update(@me, fn %{registration_tokens: tokens} = state ->
       %{state | registration_tokens: Enum.reject(tokens, fn t -> t.token == token end)}
     end)
   end
-
 
   # what is this for?
   def show(address) do

@@ -24,13 +24,9 @@ defmodule BlockchainNode.MixProject do
     [
       {:distillery, "~> 2.0"},
       {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
-      {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
-      {:libp2p, git: "https://github.com/helium/erlang-libp2p.git", branch: "master"},
-      {:erlang_ubx, git: "https://github.com/helium/erlang-ubx.git", branch: "master", override: true, app: false},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
-      {:bitcask, git: "https://github.com/helium/bitcask.git", branch: "modernize", override: true},
+      {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:cowboy, "~> 1.0.0"},
-      {:lager, "~> 3.6", override: true},
       {:plug, "~> 1.0"},
       {:poison, "~> 3.1"},
       {:logger_file_backend, "~> 0.0.10"}

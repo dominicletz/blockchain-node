@@ -7,4 +7,7 @@ case $1 in
     create_secure)
         release_remote_ctl rpc "BlockchainNode.CLI.create_secure_account(\"$2\")"
         ;;
+    list)
+        release_remote_ctl rpc "BlockchainNode.CLI.list_accounts()"
+        ;;
 esac

@@ -36,4 +36,8 @@ defmodule BlockchainNode.CLI do
       h -> h
     end
   end
+
+  def list_accounts() do
+    BlockchainNode.Accounts.list
+  end
 end

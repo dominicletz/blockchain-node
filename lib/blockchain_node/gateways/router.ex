@@ -36,6 +36,26 @@ defmodule BlockchainNode.Gateways.Router do
     }))
   end
 
+  post "/:address/confirm_registration" do
+    params = conn.body_params
+    password = if params["password"] == "" do
+      nil
+    else
+      params["password"]
+    end
+
+    case params["status"] do
+      "accept" ->
+        Gateways.confirm_registration(address, password, params["token"])
+        send_resp(conn, 200, Poison.encode!(%{
+          status: "submitted"
+        }))
+      "decline" ->
+        Gateways.delete_registration_token(params["token"])
+        send_resp(conn, 200, "")
+    end
+  end
+
   get "/coverage" do
     %{
       "res" => resolution,

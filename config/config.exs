@@ -28,19 +28,19 @@ backends: [
 config :logger,
   :info_log,
   path: "log/info.log",
-  lever: :info,
+  level: :info,
   format: "$time [$level] $message\n"
 
 config :logger,
   :error_log,
   path: "log/error.log",
-  lever: :error,
+  level: :error,
   format: "$time [$level] $message\n"
 
 config :logger,
   :debug_log,
   path: "log/debug.log",
-  lever: :debug,
+  level: :debug,
   format: "$time [$level] $message\n"
 
 #

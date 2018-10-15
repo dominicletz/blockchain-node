@@ -13,8 +13,10 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     case :blockchain_worker.blockchain() do
       :undefined -> { %{}, :undefined }
       _ ->
+        # TODO: This call would fail if the node hasn't synced and you'd get an empty list
+        # We have to ensure that the node is synced with a peer first before this is called
         case :blockchain_worker.blocks(:blockchain_worker.genesis_hash()) do
-          {:ok, blocks} ->
+          {:ok, blocks} when length(blocks) != 0 ->
             new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
 
             parse_transactions_from_blocks([ :blockchain_worker.genesis_block() | blocks ], %{}, new_head_hash)
