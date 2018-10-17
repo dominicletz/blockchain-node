@@ -94,18 +94,24 @@ defmodule BlockchainNode.Gateways do
   end
 
   def confirm_registration(owner_address, password, token) do
-    {:ok, private_key, _public_key} = Accounts.load_keys(owner_address, password)
+    case Accounts.load_keys(owner_address, password) do
+      {:ok, private_key, _public_key} ->
+        %{ txn: txn } = Agent.get(@me, fn %{registration_tokens: tokens} ->
+          Enum.find(tokens, fn t ->
+            t.token == token and to_string(:libp2p_crypto.address_to_b58(t.address)) == owner_address
+          end)
+        end)
 
-    %{ txn: txn } = Agent.get(@me, fn %{registration_tokens: tokens} ->
-      Enum.find(tokens, fn t -> t.token == token end)
-    end)
+        sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
+        signed_txn = :blockchain_txn_add_gateway.sign(txn, sig_fun)
 
-    sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
-    signed_txn = :blockchain_txn_add_gateway.sign(txn, sig_fun)
+        :ok = :blockchain_worker.submit_txn(:blockchain_txn_add_gateway, signed_txn)
 
-    :ok = :blockchain_worker.submit_txn(:txn_add_gateway, signed_txn) # what happens after submission??
-
-    delete_registration_token(token)
+        delete_registration_token(token)
+        { :ok, "gatewayRequestSubmitted" }
+      _ ->
+        { :error, "incorrectPasswordProvided" }
+    end
   end
 
   defp put_registration_token(token, address) do

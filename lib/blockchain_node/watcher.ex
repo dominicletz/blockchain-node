@@ -43,7 +43,12 @@ defmodule BlockchainNode.Watcher do
   def handle_info({:blockchain_event, {:gw_registration_request, txn, token}}, state) do
     Logger.info("got gw_registration_request event from blockchain_worker")
     case Gateways.get_registration_token(to_string(token)) do
-      nil -> nil # what happens when gateway request not found?
+      nil ->
+        Enum.each :pg2.get_members(:websocket_connections), fn pid ->
+          send pid, Poison.encode!(%{
+            type: "gatewayTokenNotFound"
+          })
+        end
       token ->
         Gateways.add_transaction_to_registration_token(token, txn)
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->

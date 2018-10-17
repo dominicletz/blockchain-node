@@ -36,7 +36,7 @@ defmodule BlockchainNode.Gateways.Router do
     }))
   end
 
-  post "/:address/confirm_registration" do
+  post "/:address/confirm_registration/accept" do
     params = conn.body_params
     password = if params["password"] == "" do
       nil
@@ -44,16 +44,22 @@ defmodule BlockchainNode.Gateways.Router do
       params["password"]
     end
 
-    case params["status"] do
-      "accept" ->
-        Gateways.confirm_registration(address, password, params["token"])
-        send_resp(conn, 200, Poison.encode!(%{
-          status: "submitted"
+    case Gateways.confirm_registration(address, password, params["token"]) do
+      {:error, "incorrectPasswordProvided" } ->
+        send_resp(conn, 401, Poison.encode!(%{
+          status: "incorrectPasswordProvided"
         }))
-      "decline" ->
-        Gateways.delete_registration_token(params["token"])
-        send_resp(conn, 200, "")
+      {:ok, "gatewayRequestSubmitted" } ->
+        send_resp(conn, 200, Poison.encode!(%{
+          status: "gatewayRequestSubmitted"
+        }))
     end
+  end
+
+  post "/:address/confirm_registration/decline" do
+    params = conn.body_params
+    Gateways.delete_registration_token(params["token"])
+    send_resp(conn, 200, "")
   end
 
   get "/coverage" do
