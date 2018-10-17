@@ -26,8 +26,8 @@ defmodule BlockchainNode.Watcher do
     Logger.info("Got integrate_genesis_block with #{genesis_hash} event from blockchain_worker")
     {:noreply, %{height: 1}}
   end
-  def handle_info({:blockchain_event, {:add_block, hash}}, state=%{height: previous_height}) do
-    Logger.info("Got add_block with hash: #{hash} event from blockchain_worker")
+  def handle_info({:blockchain_event, {:add_block, hash, flag}}, state=%{height: previous_height}) do
+    Logger.info("Got add_block with hash: #{hash} event from blockchain_worker, sync_flag: #{flag}")
     current_height = :blockchain_worker.height
     case current_height != previous_height do
       true ->
