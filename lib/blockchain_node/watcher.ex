@@ -44,9 +44,11 @@ defmodule BlockchainNode.Watcher do
     Logger.info("got gw_registration_request event from blockchain_worker")
     case Gateways.get_registration_token(to_string(token)) do
       nil ->
+        current_time = DateTime.utc_now() |> DateTime.to_unix()
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->
           send pid, Poison.encode!(%{
-            type: "gatewayTokenNotFound"
+            type: "gatewayTokenNotFound",
+            time: current_time
           })
         end
       token ->

@@ -30,6 +30,7 @@ defmodule BlockchainNode.MixProject do
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:cowboy, "~> 1.0.0"},
       {:plug, "~> 1.0"},
+      {:plug_cowboy, "~> 1.0"},
       {:poison, "~> 3.1"},
       {:logger_file_backend, "~> 0.0.10"}
     ]

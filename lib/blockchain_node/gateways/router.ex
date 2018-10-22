@@ -46,12 +46,13 @@ defmodule BlockchainNode.Gateways.Router do
 
     case Gateways.confirm_registration(address, password, params["token"]) do
       {:error, "incorrectPasswordProvided" } ->
-        send_resp(conn, 401, Poison.encode!(%{
-          status: "incorrectPasswordProvided"
-        }))
+        send_resp(conn, 401, "")
       {:ok, "gatewayRequestSubmitted" } ->
+        current_time = DateTime.utc_now() |> DateTime.to_unix()
+        
         send_resp(conn, 200, Poison.encode!(%{
-          status: "gatewayRequestSubmitted"
+          type: "gatewayRequestSubmitted",
+          time: current_time
         }))
     end
   end
