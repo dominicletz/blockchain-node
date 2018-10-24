@@ -1,6 +1,14 @@
-.PHONY: compile clean release devrelease
+.PHONY: all compile clean release devrelease
 
 MIX=$(shell which mix)
+
+all: set_rebar deps compile
+
+set_rebar:
+	mix local.rebar rebar3 ./rebar3 --force
+
+deps:
+	mix deps.get
 
 compile:
 	NO_ESCRIPT=1 $(MIX) compile
