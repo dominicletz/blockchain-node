@@ -13,10 +13,16 @@ defmodule BlockchainNode.Router do
   forward "/explorer", to: Explorer.Router
 
   get "/" do
+    height = case :blockchain_worker.height do
+      :undefined -> 0
+      height -> height
+    end
+
     send_resp(conn, 200, Poison.encode!(%{
-      nodeHeight: :blockchain_worker.height,
-      chainHeight: :blockchain_worker.height
+      nodeHeight: height,
+      chainHeight: height
     }))
+
   end
 
   match _ do
