@@ -24,7 +24,7 @@ defmodule BlockchainNode.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "rg/HELIUM-547"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
       {:libp2p, git: "https://github.com/helium/erlang-libp2p.git", override: true, branch: "adt/new-relcast"},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
