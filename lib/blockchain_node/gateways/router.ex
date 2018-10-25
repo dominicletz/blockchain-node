@@ -49,7 +49,7 @@ defmodule BlockchainNode.Gateways.Router do
         send_resp(conn, 401, "")
       {:ok, "gatewayRequestSubmitted" } ->
         current_time = DateTime.utc_now() |> DateTime.to_unix()
-        
+
         send_resp(conn, 200, Poison.encode!(%{
           type: "gatewayRequestSubmitted",
           time: current_time
@@ -59,7 +59,34 @@ defmodule BlockchainNode.Gateways.Router do
 
   post "/:address/confirm_registration/decline" do
     params = conn.body_params
-    Gateways.delete_registration_token(params["token"])
+    Gateways.delete_token(params["token"])
+    send_resp(conn, 200, "")
+  end
+
+  post "/:address/assert_location/accept" do
+    params = conn.body_params
+    password = if params["password"] == "" do
+      nil
+    else
+      params["password"]
+    end
+
+    case Gateways.confirm_assert_location(address, password, params["token"]) do
+      {:error, "incorrectPasswordProvided" } ->
+        send_resp(conn, 401, "")
+      {:ok, "assertLocationSubmitted" } ->
+        current_time = DateTime.utc_now() |> DateTime.to_unix()
+
+        send_resp(conn, 200, Poison.encode!(%{
+          type: "assertLocationSubmitted",
+          time: current_time
+        }))
+    end
+  end
+
+  post "/:address/assert_location/decline" do
+    params = conn.body_params
+    Gateways.delete_token(params["token"])
     send_resp(conn, 200, "")
   end
 

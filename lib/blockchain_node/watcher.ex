@@ -42,7 +42,7 @@ defmodule BlockchainNode.Watcher do
   end
   def handle_info({:blockchain_event, {:gw_registration_request, txn, token}}, state) do
     Logger.info("got gw_registration_request event from blockchain_worker")
-    case Gateways.get_registration_token(to_string(token)) do
+    case Gateways.get_token(to_string(token)) do
       nil ->
         current_time = DateTime.utc_now() |> DateTime.to_unix()
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->
@@ -56,6 +56,33 @@ defmodule BlockchainNode.Watcher do
         Enum.each :pg2.get_members(:websocket_connections), fn pid ->
           send pid, Poison.encode!(payload(txn, token))
         end
+    end
+
+    {:noreply, state}
+  end
+  def handle_info({:blockchain_event, {:loc_assertion_request, txn}}, state) do
+    Logger.info("got assert_location_request event from blockchain_worker")
+
+    token = :crypto.strong_rand_bytes(32)
+      |> Base.encode64(padding: false)
+    current_time = DateTime.utc_now() |> DateTime.to_unix()
+
+    Gateways.put_token(%{
+        token: token,
+        txn: txn,
+        time_created: current_time
+    })
+
+    Enum.each :pg2.get_members(:websocket_connections), fn pid ->
+      send pid, Poison.encode!(%{
+        type: "assertLocationRequest",
+        time: current_time,
+        ownerAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location.owner_address(txn))),
+        gatewayAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location.gateway_address(txn))),
+        fee: :blockchain_txn_assert_location.fee(txn),
+        location: to_string(:blockchain_txn_assert_location.location(txn)),
+        token: token
+      })
     end
 
     {:noreply, state}

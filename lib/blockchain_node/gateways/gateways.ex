@@ -15,7 +15,7 @@ defmodule BlockchainNode.Gateways do
       :ok,
       %{
         gateways: get_coordinate_list() |> list(),
-        registration_tokens: []
+        tokens: []
       }
     }
   end
@@ -38,8 +38,8 @@ defmodule BlockchainNode.Gateways do
 
   def handle_info(:cleanup, state) do
     current_time = DateTime.utc_now() |> DateTime.to_unix()
-    valid_tokens = Enum.filter(state.registration_tokens, fn t -> current_time - t.time_created < 300 end)
-    new_state = %{state | registration_tokens: valid_tokens}
+    valid_tokens = Enum.filter(state.tokens, fn t -> current_time - t.time_created < 300 end)
+    new_state = %{state | tokens: valid_tokens}
     {:noreply, new_state}
   end
 
@@ -115,15 +115,22 @@ defmodule BlockchainNode.Gateways do
     {:ok, _private_key, public_key} = Accounts.load_keys(owner_address, password)
     address = :libp2p_crypto.pubkey_to_address(public_key)
 
-    :crypto.strong_rand_bytes(32)
+    token = :crypto.strong_rand_bytes(32)
     |> Base.encode64(padding: false)
-    |> put_registration_token(address)
+
+    put_token(%{
+        token: token,
+        address: address,
+        time_created: DateTime.utc_now() |> DateTime.to_unix()
+    })
+
+    token
   end
 
   def confirm_registration(owner_address, password, token) do
     case Accounts.load_keys(owner_address, password) do
       {:ok, private_key, _public_key} ->
-        tokens = get(:registration_tokens)
+        tokens = get(:tokens)
 
         %{ txn: txn } =
           Enum.find(tokens, fn t ->
@@ -135,41 +142,54 @@ defmodule BlockchainNode.Gateways do
 
         :ok = :blockchain_worker.submit_txn(:blockchain_txn_add_gateway, signed_txn)
 
-        delete_registration_token(token)
+        delete_token(token)
         { :ok, "gatewayRequestSubmitted" }
       _ ->
         { :error, "incorrectPasswordProvided" }
     end
   end
 
-  defp put_registration_token(token, address) do
-    # TODO: handle not connected case
-    current_height = :blockchain_worker.height
-    current_time = DateTime.utc_now() |> DateTime.to_unix()
-
-    tokens = get(:registration_tokens)
-    update(:registration_tokens, [%{token: token, height: current_height, address: address, time_created: current_time} | tokens])
-
-    token
+  def put_token(token) do
+    tokens = get(:tokens)
+    update(:tokens, [token | tokens])
   end
 
-  def get_registration_token(token) do
-    tokens = get(:registration_tokens)
+  def get_token(token) do
+    tokens = get(:tokens)
     Enum.find(tokens, fn t -> t.token == token end)
   end
 
   def add_transaction_to_registration_token(token, txn) do
-    tokens = get(:registration_tokens)
+    tokens = get(:tokens)
 
     other_tokens = Enum.filter(tokens, fn t -> t.token != token.token end)
     updated_token = Map.put(token, :txn, txn)
 
-    update(:registration_tokens, [updated_token | other_tokens])
+    update(:tokens, [updated_token | other_tokens])
   end
 
-  def delete_registration_token(token) do
-    tokens = get(:registration_tokens)
-    update(:registration_tokens, Enum.reject(tokens, fn t -> t.token == token end))
+  def delete_token(token) do
+    tokens = get(:tokens)
+    update(:tokens, Enum.reject(tokens, fn t -> t.token == token end))
+  end
+
+  def confirm_assert_location(owner_address, password, token) do
+    case Accounts.load_keys(owner_address, password) do
+      {:ok, private_key, _public_key} ->
+        tokens = get(:tokens)
+
+        %{ txn: txn } = Enum.find(tokens, fn t -> t.token == token end)
+
+        sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
+        signed_txn = :blockchain_txn_assert_location.sign(txn, sig_fun)
+
+        :ok = :blockchain_worker.submit_txn(:blockchain_txn_assert_location, signed_txn)
+
+        delete_token(token)
+        { :ok, "assertLocationSubmitted" }
+      _ ->
+        { :error, "incorrectPasswordProvided" }
+    end
   end
 
   # what is this for?
