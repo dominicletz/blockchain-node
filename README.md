@@ -23,9 +23,16 @@ $ brew install autoconf automake wget yasm gmp libtool cmake clang-format lcov d
 ```
 
 ### Elixir
-
+For OSX,
 ```
 $ brew install elixir
+```
+For Ubuntu, default package manager is woefully out of date so follow [elixir-lang.org instructions](https://elixir-lang.org/install.html#unix-and-unix-like)
+```
+$ wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && sudo dpkg -i erlang-solutions_1.0_all.deb
+$ sudo apt-get update
+$ sudo apt-get install esl-erlang
+$ sudo apt-get install elixir
 ```
 
 ### Clone blockchain-node
