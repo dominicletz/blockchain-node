@@ -3,7 +3,7 @@
   "backoff": {:hex, :backoff, "1.1.6", "83b72ed2108ba1ee8f7d1c22e0b4a00cfe3593a67dbc792799e8cce9f42f796b", [:rebar3], [], "hexpm"},
   "base32": {:hex, :base32, "0.1.0", "044f6dc95709727ca2176f3e97a41ddaa76b5bc690d3536908618c0cb32616a2", [:rebar3], [], "hexpm"},
   "bitcask": {:git, "https://github.com/helium/bitcask", "d08cc8eedafefe4659b3be0ff8a256e70b72a6ec", [branch: "modernize"]},
-  "blockchain": {:git, "git@github.com:helium/blockchain-core.git", "4ac963f516047b372ff445c17c708a1314bb2b92", [branch: "master"]},
+  "blockchain": {:git, "git@github.com:helium/blockchain-core.git", "8becaad60d0a63322d4f87645782e630cf9afcc8", [branch: "master"]},
   "clique": {:git, "https://github.com/helium/clique.git", "49c51c6d70e702d4d43d97306a4a5cbc3adf1d9d", [branch: "develop"]},
   "cowboy": {:hex, :cowboy, "1.0.4", "a324a8df9f2316c833a470d918aaf73ae894278b8aa6226ce7a9bf699388f878", [:make, :rebar], [{:cowlib, "~> 1.0.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
   "cowlib": {:hex, :cowlib, "1.0.2", "9d769a1d062c9c3ac753096f868ca121e2730b9a377de23dec0f7e08b1df84ee", [:make], [], "hexpm"},
