@@ -70,7 +70,8 @@ defmodule BlockchainNode.Accounts do
       {:ok, private_key, _public_key} ->
         from = address_bin(from_address)
         to = address_bin(to_address)
-        :blockchain_worker.payment_txn(private_key, from, to, amount)
+        fee = :blockchain_ledger.transaction_fee(:blockchain_worker.ledger())
+        :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
       {:error, reason} -> {:error, reason}
     end
   end
@@ -123,7 +124,8 @@ defmodule BlockchainNode.Accounts do
       address: address,
       public_key: data["public_key"],
       balance: get_balance(address),
-      encrypted: data["encrypted"]
+      encrypted: data["encrypted"],
+      transaction_fee: :blockchain_ledger.transaction_fee(:blockchain_worker.ledger)
     }
   end
 
