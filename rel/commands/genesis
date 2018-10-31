@@ -7,4 +7,7 @@ case $1 in
     load)
         release_remote_ctl rpc "BlockchainNode.CLI.load_genesis(\"$2\")"
         ;;
+    onboard)
+        release_remote_ctl rpc "BlockchainNode.CLI.load_genesis()"
+        ;;
 esac

@@ -30,6 +30,16 @@ defmodule BlockchainNode.CLI do
     end
   end
 
+  def load_genesis do
+    case File.read(Path.join(:code.priv_dir(:blockchain_node), "genesis")) do
+      {:ok, genesis_block} ->
+        :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(genesis_block))
+      {:error, reason} ->
+        IO.inspect("Error, reason: #{reason}")
+        {:error, reason}
+    end
+  end
+
   def height() do
     case :blockchain_worker.height() do
       :undefined -> "undefined"

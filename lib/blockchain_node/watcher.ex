@@ -24,6 +24,9 @@ defmodule BlockchainNode.Watcher do
 
   def handle_info({:blockchain_event, {:integrate_genesis_block, genesis_hash}}, _state) do
     Logger.info("Got integrate_genesis_block with #{genesis_hash} event from blockchain_worker")
+    Enum.each :pg2.get_members(:websocket_connections), fn pid ->
+      send pid, Poison.encode!(payload(1))
+    end
     {:noreply, %{height: 1}}
   end
   def handle_info({:blockchain_event, {:add_block, hash, flag}}, state=%{height: previous_height}) do
