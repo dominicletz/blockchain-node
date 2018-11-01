@@ -11,15 +11,16 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
   def init() do
     case :blockchain_worker.blockchain() do
-      :undefined -> { %{}, :undefined }
-      _ ->
+      :undefined -> 
+        { %{}, :undefined }
+      chain ->
         # TODO: This call would fail if the node hasn't synced and you'd get an empty list
         # We have to ensure that the node is synced with a peer first before this is called
-        case :blockchain.blocks(:blockchain_worker.blockchain()) do
+        case :blockchain.blocks(chain) do
           {:ok, blocks} when length(blocks) != 0 ->
             new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
 
-            parse_transactions_from_blocks([ :blockchain_worker.genesis_block() | blocks ], %{}, new_head_hash)
+            parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], %{}, new_head_hash)
           _ -> { %{}, :undefined }
         end
     end
@@ -99,7 +100,9 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
     last_head_hash =
       case hash do
-        :undefined -> :blockchain_worker.genesis_hash()
+        :undefined -> 
+          chain = :blockchain_worker.blockchain()
+          :blockchain.genesis_hash(chain)
         _ -> hash
       end
 
@@ -108,7 +111,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
         new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
 
         if hash === :undefined do
-          Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks([ :blockchain_worker.genesis_block() | blocks ], txns_map, new_head_hash) end)
+          chain = :blockchain_worker.blockchain()
+          Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], txns_map, new_head_hash) end)
         else
           Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks(blocks, txns_map, new_head_hash) end)
         end
