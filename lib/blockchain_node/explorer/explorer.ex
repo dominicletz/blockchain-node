@@ -14,7 +14,11 @@ defmodule BlockchainNode.Explorer do
             nonce: nonce,
             transactions:
               all_transactions
-              |> Enum.filter(fn txn -> txn[:payer] == address or txn[:payee] == address end)
+              |> Enum.filter(fn txn ->
+                txn[:payer] == address or
+                txn[:payee] == address or
+                txn[:address] == address
+              end)
           }
         end
     end
