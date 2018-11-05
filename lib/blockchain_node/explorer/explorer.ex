@@ -67,17 +67,17 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_block(block_hash, block))
   end
 
-  # defp parse_txn(block_hash, block, {:txn_create_htlc, payer, payee, amount, fee, nonce, sig}) do
-  #   %{
-  #     type: "payment",
-  #     payer: payer |> :libp2p_crypto.address_to_b58() |> to_string(),
-  #     payee: payee |> :libp2p_crypto.address_to_b58() |> to_string(),
-  #     amount: amount,
-  #     fee: fee,
-  #     nonce: nonce
-  #   }
-  #   |> Map.merge(parse_txn_block(block_hash, block))
-  # end
+  defp parse_txn(block_hash, block, {:txn_create_htlc, payer, address, _hashlock, timelock, amount, nonce, _sig}) do
+    %{
+      type: "create_htlc",
+      payer: payer |> :libp2p_crypto.address_to_b58() |> to_string(),
+      address: address |> :libp2p_crypto.address_to_b58() |> to_string(),
+      amount: amount,
+      nonce: nonce,
+      timelock: timelock
+    }
+    |> Map.merge(parse_txn_block(block_hash, block))
+  end
 
   defp parse_txn(block_hash, block, _unknown_txn) do
     %{
