@@ -9,6 +9,14 @@ defmodule BlockchainNode.Explorer.Router do
     send_resp(conn, 200, Poison.encode!(Explorer.list_accounts()))
   end
 
+  get "/blocks" do
+    send_resp(conn, 200, Poison.encode!(Explorer.list_blocks()))
+  end
+
+  get "/transactions" do
+    send_resp(conn, 200, Poison.encode!(Explorer.list_transactions()))
+  end
+
   match _ do
     send_resp(conn, 404, "404")
   end

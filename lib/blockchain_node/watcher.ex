@@ -103,7 +103,9 @@ defmodule BlockchainNode.Watcher do
       },
       accounts: Accounts.list(),
       explorer: %{
-        accounts: Explorer.list_accounts()
+        accounts: Explorer.list_accounts(),
+        blocks: Explorer.list_blocks(),
+        transactions: Explorer.list_transactions()
       }
     }
   end
