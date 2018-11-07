@@ -90,6 +90,13 @@ defmodule BlockchainNode.Accounts.Router do
     send_resp(conn, 200, Poison.encode!(account))
   end
 
+  post "/:address/rename" do
+    params = conn.body_params
+    name = params["name"]
+    account = Accounts.rename(address, name)
+    send_resp(conn, 200, Poison.encode!(account))
+  end
+
   match _ do
     send_resp(conn, 404, "404")
   end
