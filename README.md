@@ -45,21 +45,25 @@ $ git clone git@github.com:helium/blockchain-node.git
 
 ### Fetch deps
 
-Cd into `blockchain-node` and use mix to fetch the erlang/elixir dependencies.
+`cd` into `blockchain-node` and use mix to fetch the erlang/elixir dependencies.
 
 ```
 $ mix deps.get
 ```
 
-### Building interactively
+### Build a release
+
+Unless you're doing some development on the node, you'll want to build a `prod` release.
+
+#### Building a prod release
 `cd` into the `blockchain-node` project and then run:
 
 ```
-$ make
-$ iex -S mix
+$ make release
 ```
 
-### Building a dev release
+
+#### Building a dev release
 `cd` into the `blockchain-node` project and then run:
 
 ```
@@ -68,30 +72,17 @@ $ make devrelease
 
 Note: A devrelease is not connected to the seed nodes, you need to have a local blockchain running
 
-### Building a prod release
+#### Building interactively
 `cd` into the `blockchain-node` project and then run:
 
 ```
-$ make release
+$ make
+$ iex -S mix
 ```
 
-### Starting a dev release
-In background mode:
-```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node start
-```
+### Start the release
 
-In foreground mode:
-```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node foreground
-```
-
-In console mode:
-```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node console
-```
-
-### Starting a prod release
+#### Starting a prod release
 In background mode:
 ```
 $ _build/prod/rel/blockchain_node/bin/blockchain_node start
@@ -107,19 +98,23 @@ In console mode:
 $ _build/prod/rel/blockchain_node/bin/blockchain_node console
 ```
 
-### Connecting to a miner on the blockchain
-For dev release:
+#### Starting a dev release
+In background mode:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+$ _build/dev/rel/blockchain_node/bin/blockchain_node start
 ```
 
-For prod release:
+In foreground mode:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+$ _build/dev/rel/blockchain_node/bin/blockchain_node foreground
 ```
-Note: a prod release would ideally be connected to the seed nodes since they are pre-configured
 
-### Loading a genesis block
+In console mode:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node console
+```
+
+### Load the genesis block
 
 Using the onboard genesis block:
 ```
@@ -130,6 +125,19 @@ Using a local genesis block:
 ```
 $ _build/prod/rel/blockchain_node/bin/blockchain_node genesis load <full_path_to_genesis_block_file>
 ```
+
+### Connect to a miner on the blockchain
+For prod release:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+```
+Note: a prod release would ideally be connected to the seed nodes since they are pre-configured
+
+For dev release:
+```
+$ _build/dev/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+```
+
 
 ## Installation
 
