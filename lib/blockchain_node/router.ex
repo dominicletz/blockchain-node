@@ -5,6 +5,7 @@ defmodule BlockchainNode.Router do
   alias BlockchainNode.Gateways
   alias BlockchainNode.Explorer
 
+  plug CORSPlug
   plug :match
   plug :dispatch
 

@@ -2,6 +2,7 @@ defmodule BlockchainNode.Explorer.Router do
   use Plug.Router
   alias BlockchainNode.Explorer
 
+  plug CORSPlug
   plug :match
   plug :dispatch
 
