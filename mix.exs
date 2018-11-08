@@ -31,6 +31,7 @@ defmodule BlockchainNode.MixProject do
       {:cowboy, "~> 1.0.0"},
       {:plug, "~> 1.0"},
       {:plug_cowboy, "~> 1.0"},
+      {:cors_plug, "~> 2.0"},
       {:poison, "~> 3.1"},
       {:logger_file_backend, "~> 0.0.10"},
       {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
