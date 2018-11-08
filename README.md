@@ -85,57 +85,57 @@ $ iex -S mix
 #### Starting a prod release
 In background mode:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node start
+$ ./cmd start
 ```
 
 In foreground mode:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node foreground
+$ ./cmd foreground
 ```
 
 In console mode:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node console
+$ ./cmd console
 ```
 
 #### Starting a dev release
 In background mode:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node start
+$ ./cmd -e dev start
 ```
 
 In foreground mode:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node foreground
+$ ./cmd -e dev foreground
 ```
 
 In console mode:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node console
+$ ./cmd -e dev console
 ```
 
 ### Load the genesis block
 
 Using the onboard genesis block:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node genesis onboard
+$ ./cmd genesis onboard
 ```
 
 Using a local genesis block:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node genesis load <full_path_to_genesis_block_file>
+$ ./cmd genesis load <full_path_to_genesis_block_file>
 ```
 
 ### Connect to a miner on the blockchain
 For prod release:
 ```
-$ _build/prod/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+$ ./cmd peer connect <listen_addr>
 ```
 Note: a prod release would ideally be connected to the seed nodes since they are pre-configured
 
 For dev release:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node peer connect <listen_addr>
+$ ./cmd -e dev peer connect <listen_addr>
 ```
 
 
