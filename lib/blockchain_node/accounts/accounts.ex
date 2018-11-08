@@ -93,6 +93,15 @@ defmodule BlockchainNode.Accounts do
     load_account(address)
   end
 
+  def rename(address, name) do
+    filename = to_filename(address)
+    file_content = load_account_data(address)
+                   |> Map.merge(%{ "name" => name })
+                   |> Poison.encode!()
+    File.write(filename, file_content, [:binary])
+    load_account(address)
+  end
+
   def valid_password?(address, password) do
     case load_keys(address, password) do
       {:ok, _private_key, _public_key} -> true
@@ -122,6 +131,7 @@ defmodule BlockchainNode.Accounts do
 
     %Account{
       address: address,
+      name: data["name"],
       public_key: data["public_key"],
       balance: get_balance(address),
       encrypted: data["encrypted"],
