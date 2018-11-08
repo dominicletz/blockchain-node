@@ -43,6 +43,14 @@ Clone the `blockchain-node` project somewhere.
 $ git clone git@github.com:helium/blockchain-node.git
 ```
 
+### Fetch deps
+
+Cd into `blockchain-node` and use mix to fetch the erlang/elixir dependencies.
+
+```
+$ mix deps.get
+```
+
 ### Building interactively
 `cd` into the `blockchain-node` project and then run:
 
@@ -113,9 +121,14 @@ Note: a prod release would ideally be connected to the seed nodes since they are
 
 ### Loading a genesis block
 
-For dev release:
+Using the onboard genesis block:
 ```
-$ _build/dev/rel/blockchain_node/bin/blockchain_node genesis load <full_path_to_genesis_block_file>
+$ _build/prod/rel/blockchain_node/bin/blockchain_node genesis onboard
+```
+
+Using a local genesis block:
+```
+$ _build/prod/rel/blockchain_node/bin/blockchain_node genesis load <full_path_to_genesis_block_file>
 ```
 
 ## Installation
