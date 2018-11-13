@@ -25,5 +25,5 @@ devrelease:
 deployable: release
 	@rm -rf latest
 	@mkdir latest
-	@cd _build/prod/rel && tar -czf blockchain_node.tgz blockchain_node
-	@mv _build/prod/rel/blockchain_node.tgz latest/
+	@cd _build/prod/rel && tar -czf blockchain_node-$(NODE_OS).tgz blockchain_node
+	@mv _build/prod/rel/blockchain_node-$(NODE_OS).tgz latest/

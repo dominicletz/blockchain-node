@@ -1,8 +1,15 @@
 matrix:
   include:
+  - os: linux
+    env:
+    - NODE_OS=linux
+    language: elixir
+    elixir: 1.7.3
+    otp_release: 21.0.4
   - os: osx
     env:
     - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2m"
+    - NODE_OS=darwin
     osx_image: xcode9.2
     language: minimal
     before_install:
