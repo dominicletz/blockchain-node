@@ -1,25 +1,37 @@
 matrix:
   include:
-    - os: linux
-      env: S3_UPLOAD_DIR=node/linux
-      language: elixir
-      elixir: '1.7.3'
-      otp_release: '21.0.4'
-    - os: osx
-      env: S3_UPLOAD_DIR=node/darwin
-      osx_image: xcode9.2
-      language: minimal
-      before_install:
-        - brew update
-        - brew install elixir
-      install: mix local.rebar --force; mix local.hex --force; mix deps.get
+  - os: osx
+    env:
+    - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2p"
+    osx_image: xcode9.2
+    language: minimal
+    before_install:
+    - brew update
+    - brew install kerl openssl
+    - if [ ! -d $HOME/kerl/21.1 ]; then kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
+    - . $HOME/kerl/activate
+    - brew install elixir
+    install: mix local.rebar --force; mix local.hex --force; mix deps.get
+
+cache:
+  directories:
+    - $HOME/kerl
+    - $HOME/Library/Caches/Homebrew
+    - /usr/local/Cellar/openssl
+    - /usr/local/opt/openssl
+    - /usr/local/Cellar/kerl
+    - /usr/local/opt/kerl
+    - /usr/local/Cellar/elixir
+    - /usr/local/opt/elixir
+
 script: make deployable
+
 deploy:
-  provider: s3
-  access_key_id: $S3_ACCESS_KEY
-  secret_access_key: $S3_SECRET_ACCESS_KEY
-  bucket: "helium-wallet"
-  region: us-west-2
-  skip_cleanup: true
-  upload-dir: $S3_UPLOAD_DIR
-  local_dir: latest
+  provider: releases
+  api_key:
+    secure: S+Whp0NMJvHq/Qe6EuVj0pKTpMBCYjKI6KCzQhWgy8rpKG7pPWkSqSwDXeeWwNRZBucV43u98HT7kkOA7FCRh6i7d+dWq/HyvmLZxQSMzYbwU5n3JEcLBDEgwCSTt5EufLxD4hKaJxQo6m9x26L7WU1KnZ138AtGnSjGazfWKZOVs2v/PCmE3E+/ix1tyTBiEgTviwpMot1r9WQhF9mulMUHOhGeWNThu1yeQmx5raPy+PjTRPzUvM2gpXflYUxSMM9LxvQE2RKaji6g4QMgWj3jRqeRSYb/vQlXKTZpDu109FpydSKMYYBMKG4e4yWzH3dF62c3N6iwwX7FGMHU3bCP14lz61cLFhJNYPRtDapwPS9JZlPHTqacEkF1XSK6YloeFAHA7Kt8aOF2a87W+k/zMe/UaszpztnI1IImd6lCDz4dYkPyCvUktcARzQtbxWmEy5RFqbVMDW+FQaq7yEBJzMcs6OKRcHcNiEasxQsJpXIyb0Bq0P1NoLBMTJ0qX0CP7gNciMbfNL63R9O4V3c34n5JtcEePzsfyLuyX4MTb5S/2qhuM7psi6LzOpPLdlpIOdAtmRuSfEKtFUV3FoVINtchbgn5U65B73jacb+/f97+KYYr8dfM1o2EfcmhJb+lnRf5eQZPSsPRe7sPvw1zLn3VM9RxSBpr/SUXvxI=
+  file_glob: true
+  file: latest/*
+  on:
+    repo: helium/blockchain-node
+    draft: true
