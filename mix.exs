@@ -4,11 +4,16 @@ defmodule BlockchainNode.MixProject do
   def project do
     [
       app: :blockchain_node,
-      version: "0.1.0",
+      version: get_version(),
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
+  end
+
+  defp get_version() do
+    {:ok, content} = File.read("VERSION")
+    content |> String.trim()
   end
 
   # Run "mix help compile.app" to learn about applications.

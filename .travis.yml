@@ -27,6 +27,6 @@ deploy:
   file_glob: true
   file: latest/*
   draft: true
-  tag_name: $TRAVIS_TAG
+  tag_name: v0.1.0
   on:
     repo: helium/blockchain-node
