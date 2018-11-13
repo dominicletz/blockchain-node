@@ -2,12 +2,11 @@ matrix:
   include:
   - os: osx
     env:
-    - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2p"
+    - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2m"
     osx_image: xcode9.2
     language: minimal
     before_install:
     - brew update
-    - brew install openssl
     - brew install kerl
     - if [ ! -d $HOME/kerl/21.1 ]; then kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
     - . $HOME/kerl/activate
@@ -18,12 +17,6 @@ cache:
   directories:
     - $HOME/kerl
     - $HOME/Library/Caches/Homebrew
-    - /usr/local/Cellar/openssl
-    - /usr/local/opt/openssl
-    - /usr/local/Cellar/kerl
-    - /usr/local/opt/kerl
-    - /usr/local/Cellar/elixir
-    - /usr/local/opt/elixir
 
 script: make deployable
 
