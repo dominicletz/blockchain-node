@@ -7,7 +7,8 @@ matrix:
     language: minimal
     before_install:
     - brew update
-    - brew install kerl openssl
+    - brew install openssl
+    - brew install kerl
     - if [ ! -d $HOME/kerl/21.1 ]; then kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
     - . $HOME/kerl/activate
     - brew install elixir
