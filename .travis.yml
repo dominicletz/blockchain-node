@@ -9,7 +9,7 @@ matrix:
     - brew update
     - brew install kerl
     - if [ ! -d $HOME/kerl/21.1 ]; then travis_wait 40 kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
-    - . $HOME/kerl/activate
+    - . $HOME/kerl/21.1/activate
     - brew install elixir
     install: mix local.rebar --force; mix local.hex --force; mix deps.get
 
