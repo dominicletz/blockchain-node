@@ -80,9 +80,10 @@ defmodule BlockchainNode.Explorer do
     %{
       type: "create_htlc",
       payer: txn |> txn_mod.payer() |> addr_to_b58(),
+      payee: txn |> txn_mod.payee() |> addr_to_b58(),
       address: txn |> txn_mod.address() |> addr_to_b58(),
       amount: txn |> txn_mod.amount(),
-      nonce: txn |> txn_mod.nonce(),
+      fee: txn |> txn_mod.fee(),
       timelock: txn |> txn_mod.timelock(),
       hashlock: txn |> txn_mod.hashlock() |> to_hex()
     }
@@ -94,7 +95,8 @@ defmodule BlockchainNode.Explorer do
       type: "redeem_htlc",
       payee: txn |> txn_mod.payee() |> addr_to_b58(),
       address: txn |> txn_mod.address() |> addr_to_b58(),
-      preimage: txn |> txn_mod.preimage() |> to_hex()
+      preimage: txn |> txn_mod.preimage() |> to_hex(),
+      fee: txn |> txn_mod.fee(),
     }
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
