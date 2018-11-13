@@ -6,7 +6,6 @@ matrix:
     osx_image: xcode9.2
     language: minimal
     before_install:
-    - brew update
     - brew install kerl
     - if [ ! -d $HOME/kerl/21.1 ]; then travis_wait 40 kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
     - . $HOME/kerl/21.1/activate
@@ -17,11 +16,13 @@ cache:
   directories:
     - $HOME/kerl
     - $HOME/Library/Caches/Homebrew
+    - $HOME/build/helium/blockchain-node/deps
 
 script: make deployable
 
 deploy:
   provider: releases
+  skip_cleanup: true
   api_key:
     secure: S+Whp0NMJvHq/Qe6EuVj0pKTpMBCYjKI6KCzQhWgy8rpKG7pPWkSqSwDXeeWwNRZBucV43u98HT7kkOA7FCRh6i7d+dWq/HyvmLZxQSMzYbwU5n3JEcLBDEgwCSTt5EufLxD4hKaJxQo6m9x26L7WU1KnZ138AtGnSjGazfWKZOVs2v/PCmE3E+/ix1tyTBiEgTviwpMot1r9WQhF9mulMUHOhGeWNThu1yeQmx5raPy+PjTRPzUvM2gpXflYUxSMM9LxvQE2RKaji6g4QMgWj3jRqeRSYb/vQlXKTZpDu109FpydSKMYYBMKG4e4yWzH3dF62c3N6iwwX7FGMHU3bCP14lz61cLFhJNYPRtDapwPS9JZlPHTqacEkF1XSK6YloeFAHA7Kt8aOF2a87W+k/zMe/UaszpztnI1IImd6lCDz4dYkPyCvUktcARzQtbxWmEy5RFqbVMDW+FQaq7yEBJzMcs6OKRcHcNiEasxQsJpXIyb0Bq0P1NoLBMTJ0qX0CP7gNciMbfNL63R9O4V3c34n5JtcEePzsfyLuyX4MTb5S/2qhuM7psi6LzOpPLdlpIOdAtmRuSfEKtFUV3FoVINtchbgn5U65B73jacb+/f97+KYYr8dfM1o2EfcmhJb+lnRf5eQZPSsPRe7sPvw1zLn3VM9RxSBpr/SUXvxI=
   file_glob: true
