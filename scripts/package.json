@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "release": "node release.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "^15.17.0"
+  }
+}
