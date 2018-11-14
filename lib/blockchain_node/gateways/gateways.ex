@@ -91,7 +91,7 @@ defmodule BlockchainNode.Gateways do
       :undefined ->
         []
       ledger ->
-        for {addr, {:gw_info, owner_address, location, last_poc_challenge, nonce, score}} <- :blockchain_ledger.active_gateways(ledger) do
+        for {addr, {:gateway, owner_address, location, last_poc_challenge, nonce, score}} <- :blockchain_ledger.active_gateways(ledger) do
           {lat, lng}= case location do
             :undefined ->
               {nil, nil}
