@@ -1,9 +1,13 @@
 const octokit = require('@octokit/rest')()
 const fs = require('fs')
 
+const getVersion = () => (
+  fs.readFileSync('../VERSION').toString().trim()
+)
 const owner = 'helium'
 const repo = 'blockchain-node'
 const per_page = 100
+const tag_name = `v${getVersion()}`
 
 octokit.authenticate({
   type: 'token',
@@ -16,18 +20,19 @@ async function run() {
 }
 
 async function fetchRelease() {
-  return new Promise((resolve, reject) => {
-    octokit.repos.getReleases({ owner, repo, per_page }).then(({ data, headers, status }) => {
-      const tagName = `v${getVersion()}`
-      const release = data.filter(d => d.draft).find(d => d.tag_name === tagName)
+  const { data: releases } = await octokit.repos.getReleases({owner, repo})
+  const release = releases.filter(r => r.draft).find(r => r.tag_name === tag_name)
 
-      if (release) {
-        resolve(release)
-      } else {
-        reject(new Error(`Couldn't find draft release with tag_name: ${tagName}`))
-      }
-    })
-  })
+  if (release) {
+    return release
+  } else {
+    console.log(`Couldn't find draft release with tag_name: ${tag_name}. Creating...`)
+    await octokit.repos.createRelease({owner, repo, tag_name, draft: true})
+  }
+}
+
+async function createRelease() {
+  await octokit.repos.createRelease({owner, repo, tag_name, target_commitish, name, body, draft, prerelease})
 }
 
 async function uploadAssets(release) {
@@ -81,9 +86,5 @@ async function deleteAsset(asset_id) {
     }).then(resolve())
   })
 }
-
-const getVersion = () => (
-  fs.readFileSync('../VERSION').toString().trim()
-)
 
 run()
