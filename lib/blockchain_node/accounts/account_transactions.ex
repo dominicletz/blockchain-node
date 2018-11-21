@@ -209,11 +209,11 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
     Enum.reduce(txns_in_block, acc1, fn txn, acc2 ->
       payer = txn
-        |> :blockchain_txn_payment_v1.payer()
+        |> :blockchain_txn_payment.payer()
         |> :libp2p_crypto.address_to_b58()
         |> to_string()
       payee = txn
-        |> :blockchain_txn_payment_v1.payee()
+        |> :blockchain_txn_payment.payee()
         |> :libp2p_crypto.address_to_b58()
         |> to_string()
 
@@ -223,8 +223,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
             if Enum.any?(owned_accounts, fn x -> x === acct_address end) do
               subtotal =
                 cond do
-                  acct_address === payer -> :blockchain_txn_payment_v1.amount(txn) * -1
-                  acct_address === payee -> :blockchain_txn_payment_v1.amount(txn)
+                  acct_address === payer -> :blockchain_txn_payment.amount(txn) * -1
+                  acct_address === payee -> :blockchain_txn_payment.amount(txn)
                 end
 
               total = List.first(list).total + subtotal
@@ -235,8 +235,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                     address: acct_address,
                     payer: payer,
                     payee: payee,
-                    amount: :blockchain_txn_payment_v1.amount(txn),
-                    payment_nonce: :blockchain_txn_payment_v1.nonce(txn),
+                    amount: :blockchain_txn_payment.amount(txn),
+                    payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height,
                     total: total,
                     time: time
@@ -250,7 +250,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
             if Enum.any?(owned_accounts, fn x -> x === acct_address end) do
               total =
                 cond do
-                  acct_address === payee -> :blockchain_txn_payment_v1.amount(txn)
+                  acct_address === payee -> :blockchain_txn_payment.amount(txn)
                 end
 
               Map.put(acc3, acct_address,
@@ -259,8 +259,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
                     address: acct_address,
                     payer: payer,
                     payee: payee,
-                    amount: :blockchain_txn_payment_v1.amount(txn),
-                    payment_nonce: :blockchain_txn_payment_v1.nonce(txn),
+                    amount: :blockchain_txn_payment.amount(txn),
+                    payment_nonce: :blockchain_txn_payment.nonce(txn),
                     block_height: height,
                     total: total,
                     time: time

@@ -80,10 +80,10 @@ defmodule BlockchainNode.Watcher do
       send pid, Poison.encode!(%{
         type: "assertLocationRequest",
         time: current_time,
-        ownerAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.owner_address(txn))),
-        gatewayAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location_v1.gateway_address(txn))),
-        fee: :blockchain_txn_assert_location_v1.fee(txn),
-        location: to_string(:blockchain_txn_assert_location_v1.location(txn)),
+        ownerAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location.owner_address(txn))),
+        gatewayAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_assert_location.gateway_address(txn))),
+        fee: :blockchain_txn_assert_location.fee(txn),
+        location: to_string(:blockchain_txn_assert_location.location(txn)),
         token: token
       })
     end
@@ -115,8 +115,8 @@ defmodule BlockchainNode.Watcher do
 
     %{
       type: "newGatewayRequest",
-      ownerAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.owner_address(txn))),
-      gatewayAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway_v1.gateway_address(txn))),
+      ownerAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway.owner_address(txn))),
+      gatewayAddress: to_string(:libp2p_crypto.address_to_b58(:blockchain_txn_add_gateway.gateway_address(txn))),
       token: to_string(token.token),
       time: current_time
     }
