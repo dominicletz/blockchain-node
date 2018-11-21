@@ -139,9 +139,9 @@ defmodule BlockchainNode.Gateways do
           end)
 
         sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
-        signed_txn = :blockchain_txn_add_gateway.sign(txn, sig_fun)
+        signed_txn = :blockchain_txn_add_gateway_v1.sign(txn, sig_fun)
 
-        :ok = :blockchain_worker.submit_txn(:blockchain_txn_add_gateway, signed_txn)
+        :ok = :blockchain_worker.submit_txn(:blockchain_txn_add_gateway_v1, signed_txn)
 
         delete_token(token)
         { :ok, "gatewayRequestSubmitted" }
@@ -182,9 +182,9 @@ defmodule BlockchainNode.Gateways do
         %{ txn: txn } = Enum.find(tokens, fn t -> t.token == token end)
 
         sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
-        signed_txn = :blockchain_txn_assert_location.sign(txn, sig_fun)
+        signed_txn = :blockchain_txn_assert_location_v1.sign(txn, sig_fun)
 
-        :ok = :blockchain_worker.submit_txn(:blockchain_txn_assert_location, signed_txn)
+        :ok = :blockchain_worker.submit_txn(:blockchain_txn_assert_location_v1, signed_txn)
 
         delete_token(token)
         { :ok, "assertLocationSubmitted" }

@@ -63,7 +63,7 @@ defmodule BlockchainNode.Explorer do
     parse_txn(:blockchain_transactions.type(txn), block_hash, block, txn)
   end
 
-  defp parse_txn(:blockchain_txn_payment = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_payment_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "payment",
       hash: txn |> txn_mod.hash() |> addr_to_b58(),
@@ -76,7 +76,7 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
 
-  defp parse_txn(:blockchain_txn_create_htlc = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_create_htlc_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "create_htlc",
       payer: txn |> txn_mod.payer() |> addr_to_b58(),
@@ -90,7 +90,7 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
 
-  defp parse_txn(:blockchain_txn_redeem_htlc = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_redeem_htlc_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "redeem_htlc",
       payee: txn |> txn_mod.payee() |> addr_to_b58(),
@@ -101,7 +101,7 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
 
-  defp parse_txn(:blockchain_txn_add_gateway = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_add_gateway_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "add_gateway",
       gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
@@ -110,7 +110,7 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
 
-  defp parse_txn(:blockchain_txn_assert_location = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_assert_location_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "assert_location",
       gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
@@ -122,7 +122,7 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end
 
-  defp parse_txn(:blockchain_txn_oui = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_oui_v1 = txn_mod, block_hash, block, txn) do
     %{
       type: "oui",
       oui: txn |> txn_mod.oui() |> to_hex(),
