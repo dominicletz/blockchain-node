@@ -17,9 +17,13 @@ defmodule BlockchainNode.Application do
     {privkey, pubkey} = :libp2p_crypto.generate_keys()
     sig_fun = :libp2p_crypto.mk_sig_fun(privkey)
     base_dir = ~c(data)
-    blockchain_opts = [
+    seed_nodes = Application.fetch_env!(:blockchain, :seed_nodes)
+    seed_node_dns = Application.fetch_env!(:blockchain, :seed_node_dns)
+    seed_addresses = dns_to_addresses(seed_node_dns)
+
+    blockchain_sup_opts = [
       {:key, {pubkey, sig_fun}},
-      {:seed_nodes, []},
+      {:seed_nodes, seed_nodes ++ seed_addresses},
       {:port, 0},
       {:num_consensus_members, 7},
       {:base_dir, base_dir},
@@ -29,7 +33,7 @@ defmodule BlockchainNode.Application do
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
       Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch()]),
-      supervisor(:blockchain_sup, [blockchain_opts], id: :blockchain_sup, restart: :permanent),
+      supervisor(:blockchain_sup, [blockchain_sup_opts], id: :blockchain_sup, restart: :permanent),
       worker(BlockchainNode.Watcher, []),
       worker(BlockchainNode.Gateways, []),
       worker(BlockchainNode.Accounts.AccountTransactions, [])
@@ -48,5 +52,14 @@ defmodule BlockchainNode.Application do
         {:_, Plug.Adapters.Cowboy.Handler, {Router, []}}
       ]}
     ]
+  end
+
+  defp dns_to_addresses(seed_node_dns) do
+    List.flatten(for x <- :inet_res.lookup(seed_node_dns, :in, :txt),
+      String.starts_with?(to_string(x), "blockchain-seed-nodes="),
+      do: String.trim_leading(to_string(x), "blockchain-seed-nodes="))
+    |> List.to_string()
+    |> String.split(",")
+    |> Enum.map(&String.to_charlist/1)
   end
 end
