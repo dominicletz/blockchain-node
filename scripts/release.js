@@ -21,8 +21,13 @@ async function run() {
 
 async function fetchRelease() {
   const { data: releases } = await octokit.repos.getReleases({owner, repo})
-  const release = releases.filter(r => r.draft).find(r => r.tag_name === tag_name)
 
+  const publishedRelease = releases.filter(r => !r.draft).find(r => r.tag_name === tag_name)
+  if (publishedRelease) {
+    throw Error(`published release exists with tag_name: ${tag_name}`)
+  }
+
+  const release = releases.filter(r => r.draft).find(r => r.tag_name === tag_name)
   if (release) {
     return release
   } else {

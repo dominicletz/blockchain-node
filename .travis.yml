@@ -27,6 +27,10 @@ cache:
 
 script: make deployable
 
+stages:
+  - name: after_success
+    if: branch = master
+
 after_success:
   - nvm install 10.12.0
   - nvm use 10.12.0
