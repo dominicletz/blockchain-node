@@ -32,7 +32,7 @@ defmodule BlockchainNode.Gateways.Router do
     send_resp(conn, 200, Poison.encode!(%{
       token: Gateways.registration_token(address, password),
       owner: address,
-      addr: Networking.listen_addr()
+      addr: Networking.swarm_addr()
     }))
   end
 

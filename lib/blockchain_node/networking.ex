@@ -7,4 +7,11 @@ defmodule BlockchainNode.Networking do
     |> Enum.filter(fn addr -> addr =~ "/p2p/" end)
     |> List.last()
   end
+
+  def swarm_addr do
+    :blockchain_swarm.swarm
+    |> :libp2p_swarm.p2p_address()
+    |> to_string()
+  end
+
 end
