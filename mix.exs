@@ -7,7 +7,8 @@ defmodule BlockchainNode.MixProject do
       version: get_version(),
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      elixirc_options: debug_info(Mix.env)
     ]
   end
 
@@ -41,4 +42,7 @@ defmodule BlockchainNode.MixProject do
       {:lager, "3.6.7", [env: :prod, repo: "hexpm", hex: "lager", override: true, manager: :rebar3]}
     ]
   end
+
+  defp debug_info(:prod), do: [debug_info: false]
+  defp debug_info(_), do: [debug_info: true]
 end
