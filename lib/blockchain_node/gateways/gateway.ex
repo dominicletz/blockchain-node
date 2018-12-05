@@ -2,6 +2,7 @@ defmodule BlockchainNode.Gateways.Gateway do
   @derive [Poison.Encoder]
   defstruct [
     :address,
+    :owner,
     :h3_index,
     :lat,
     :lng,

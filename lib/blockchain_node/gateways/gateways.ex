@@ -28,12 +28,20 @@ defmodule BlockchainNode.Gateways do
     GenServer.cast(@me, {:update, key, value})
   end
 
+  def refresh_gateways() do
+    GenServer.cast(@me, {:refresh})
+  end
+
   def handle_call({:get, key}, _, state) do
     {:reply, Map.get(state, key), state}
   end
 
   def handle_cast({:update, key, value}, state) do
     {:noreply, Map.put(state, key, value)}
+  end
+
+  def handle_cast({:refresh}, state) do
+    {:noreply, Map.put(state, :gateways, get_active_gateways())}
   end
 
   def handle_info(:cleanup, state) do
@@ -100,6 +108,7 @@ defmodule BlockchainNode.Gateways do
           end
           %Gateway{
             address: addr |> :libp2p_crypto.address_to_b58() |> to_string(),
+            owner: owner_address |> :libp2p_crypto.address_to_b58() |> to_string(),
             blocks_mined: 0,
             h3_index: (if (location == :undefined), do: nil, else: to_string(location)),
             lat: lat,

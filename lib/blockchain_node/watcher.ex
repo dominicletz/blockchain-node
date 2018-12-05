@@ -38,6 +38,7 @@ defmodule BlockchainNode.Watcher do
           send pid, Poison.encode!(payload(current_height))
         end
         AccountTransactions.update_transactions_state()
+        Gateways.refresh_gateways()
         {:noreply, %{height: current_height}}
       false ->
         {:noreply, state}
