@@ -16,9 +16,13 @@ matrix:
     env:
     - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2m"
     - NODE_OS=darwin
+    - SSH_ASKPASS=/usr/local/bin/ssh-askpass
     osx_image: xcode9.2
     language: minimal
     before_install:
+    - brew install https://raw.githubusercontent.com/kadwanev/bigboybrew/master/Library/Formula/sshpass.rb
+    - brew tap theseal/ssh-askpass
+    - brew install ssh-askpass
     - openssl aes-256-cbc -K $encrypted_a353bc0ca73b_key -iv $encrypted_a353bc0ca73b_iv
       -in id_rsa.enc -out /tmp/id_rsa -d
     - eval "$(ssh-agent -s)"
