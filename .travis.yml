@@ -6,6 +6,12 @@ matrix:
     language: elixir
     elixir: 1.7.3
     otp_release: 21.0.4
+    before_install:
+    - openssl aes-256-cbc -K $encrypted_a353bc0ca73b_key -iv $encrypted_a353bc0ca73b_iv
+      -in id_rsa.enc -out /tmp/id_rsa -d
+    - eval "$(ssh-agent -s)"
+    - chmod 600 /tmp/id\_rsa
+    - ssh-add /tmp/id\_rsa
   - os: osx
     env:
     - KERL_CONFIGURE_OPTIONS="--disable-dynamic-ssl --with-ssl=/usr/local/Cellar/openssl/1.0.2m"
@@ -13,6 +19,11 @@ matrix:
     osx_image: xcode9.2
     language: minimal
     before_install:
+    - openssl aes-256-cbc -K $encrypted_a353bc0ca73b_key -iv $encrypted_a353bc0ca73b_iv
+      -in id_rsa.enc -out /tmp/id_rsa -d
+    - eval "$(ssh-agent -s)"
+    - chmod 600 /tmp/id\_rsa
+    - ssh-add /tmp/id\_rsa
     - brew install kerl
     - if [ ! -d $HOME/kerl/21.1 ]; then travis_wait 40 kerl build 21.1 21.1 && kerl
       install 21.1 $HOME/kerl/21.1; fi
@@ -33,9 +44,3 @@ after_success:
 - nvm use 10.12.0
 - npm --prefix scripts install
 - npm run --prefix scripts release
-before_install:
-- openssl aes-256-cbc -K $encrypted_a353bc0ca73b_key -iv $encrypted_a353bc0ca73b_iv
-  -in id_rsa.enc -out /tmp/id_rsa -d
-- eval "$(ssh-agent -s)"
-- chmod 600 /tmp/id\_rsa
-- ssh-add /tmp/id\_rsa
