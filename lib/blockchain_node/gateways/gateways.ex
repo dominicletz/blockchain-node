@@ -52,7 +52,14 @@ defmodule BlockchainNode.Gateways do
   end
 
   def get_all() do
-    get(:gateways)
+    gateways = get(:gateways)
+
+    %{
+      entries: gateways,
+      total: Enum.count(gateways),
+      page: 0,
+      per_page: Enum.count(gateways)
+    }
   end
 
   def get_paginated(page, per_page) do

@@ -17,7 +17,7 @@ defmodule BlockchainNode.Gateways.Router do
 
         send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(page, per_page)))
       _ ->
-        send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(0, 10)))
+        send_resp(conn, 200, Poison.encode!(Gateways.get_all()))
     end
   end
 
