@@ -14,25 +14,28 @@ matrix:
     language: minimal
     before_install:
     - brew install kerl
-    - if [ ! -d $HOME/kerl/21.1 ]; then travis_wait 40 kerl build 21.1 21.1 && kerl install 21.1 $HOME/kerl/21.1; fi
-    - . $HOME/kerl/21.1/activate
+    - if [ ! -d $HOME/kerl/21.1 ]; then travis_wait 40 kerl build 21.1 21.1 && kerl
+      install 21.1 $HOME/kerl/21.1; fi
+    - ". $HOME/kerl/21.1/activate"
     - brew install elixir
     install: mix local.rebar --force; mix local.hex --force; mix deps.get
-
 cache:
   directories:
-    - $HOME/kerl
-    - $HOME/Library/Caches/Homebrew
-    - $HOME/build/helium/blockchain-node/deps
-
+  - "$HOME/kerl"
+  - "$HOME/Library/Caches/Homebrew"
+  - "$HOME/build/helium/blockchain-node/deps"
 script: make deployable
-
 stages:
-  - name: after_success
-    if: branch = master
-
+- name: after_success
+  if: branch = master
 after_success:
-  - nvm install 10.12.0
-  - nvm use 10.12.0
-  - npm --prefix scripts install
-  - npm run --prefix scripts release
+- nvm install 10.12.0
+- nvm use 10.12.0
+- npm --prefix scripts install
+- npm run --prefix scripts release
+before_install:
+- openssl aes-256-cbc -K $encrypted_a353bc0ca73b_key -iv $encrypted_a353bc0ca73b_iv
+  -in id_rsa.enc -out id_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 /tmp/id\_rsa
+- ssh-add /tmp/id\_rsa
