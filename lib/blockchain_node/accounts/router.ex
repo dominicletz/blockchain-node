@@ -97,6 +97,26 @@ defmodule BlockchainNode.Accounts.Router do
     send_resp(conn, 200, Poison.encode!(account))
   end
 
+  post "/:address/associate" do
+    params = conn.body_params
+    password = if params["password"] == "" do
+      nil
+    else
+      params["password"]
+    end
+
+    case Accounts.add_association(address, password) do
+      {:error, reason} ->
+        error = Poison.encode!(%{
+          error: to_string(reason)
+        })
+        send_resp(conn, 500, error)
+      _ ->
+        account = Accounts.show(address)
+        send_resp(conn, 200, Poison.encode!(account))
+    end
+  end
+
   match _ do
     send_resp(conn, 404, "404")
   end

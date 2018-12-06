@@ -23,7 +23,7 @@
   "inet_ext": {:git, "https://github.com/benoitc/inet_ext", "a5fc4045e49cdad49fbd760365b06dcb35e51520", [branch: "master"]},
   "intercept": {:hex, :intercept, "1.0.0", "1f6c725e6fc070720643bd4d97ee53b1209365c80e520e1f5a1acb36712a7eb5", [:rebar3], [], "hexpm"},
   "lager": {:hex, :lager, "3.6.7", "2fbf823944caa0fc10df5ec13f3f047524a249bb32f0d801b7900c9610264286", [:rebar3], [{:goldrush, "0.1.9", [hex: :goldrush, repo: "hexpm", optional: false]}], "hexpm"},
-  "libp2p": {:git, "https://github.com/helium/erlang-libp2p.git", "60469f891ef000ed219023cb028deac39dd04be9", [branch: "master"]},
+  "libp2p": {:git, "git@github.com:helium/erlang-libp2p.git", "8e046cf6c8df1214f8999cd1fcaf9079994f2277", [branch: "master"]},
   "logger_file_backend": {:hex, :logger_file_backend, "0.0.10", "876f9f84ae110781207c54321ffbb62bebe02946fe3c13f0d7c5f5d8ad4fa910", [:mix], [], "hexpm"},
   "mime": {:hex, :mime, "1.3.1", "30ce04ab3175b6ad0bdce0035cba77bba68b813d523d1aac73d9781b4d193cf8", [:mix], [], "hexpm"},
   "multiaddr": {:hex, :multiaddr, "1.1.3", "978e58e28f6facaf428c87af933612b1e2f3f2775f1794eda5e831a4eacd2984", [:rebar3], [{:base32, "0.1.0", [hex: :base32, repo: "hexpm", optional: false]}, {:erl_base58, "0.0.1", [hex: :erl_base58, repo: "hexpm", optional: false]}, {:small_ints, "0.1.0", [hex: :small_ints, repo: "hexpm", optional: false]}], "hexpm"},

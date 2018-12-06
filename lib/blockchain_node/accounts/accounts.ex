@@ -14,6 +14,7 @@ defmodule BlockchainNode.Accounts do
 
   def get_account_keys do
     File.mkdir_p(keys_dir())
+
     with {:ok, files} <- File.ls(keys_dir()),
          files = Enum.filter(files, fn f -> String.length(f) >= 50 end) do
       files
@@ -21,35 +22,39 @@ defmodule BlockchainNode.Accounts do
   end
 
   def create(nil) do
-    {private_key, public_key} = :libp2p_crypto.generate_keys()
+    keys = {private_key, public_key} = :libp2p_crypto.generate_keys()
+    add_association(keys)
     address = address_str(public_key)
+
+    file_content =
+      Poison.encode!(%{
+        encrypted: false,
+        public_key: public_key_str(public_key),
+        pem: :libp2p_crypto.to_pem(private_key)
+      })
+
     File.mkdir_p(keys_dir())
-    filename = to_filename(address)
-    pem_bin = :libp2p_crypto.to_pem(private_key)
-    file_content = Poison.encode!(%{
-                                     encrypted: false,
-                                     public_key: public_key_str(public_key),
-                                     pem: pem_bin
-                                   })
-    File.write(filename, file_content, [:binary])
+    File.write(to_filename(address), file_content, [:binary])
     load_account(address)
   end
 
   def create(password) do
-    {private_key, public_key} = :libp2p_crypto.generate_keys()
+    keys = {private_key, public_key} = :libp2p_crypto.generate_keys()
+    add_association(keys)
     address = address_str(public_key)
+    {iv, tag, data} = Crypto.encrypt(password, :libp2p_crypto.to_pem(private_key))
+
+    file_content =
+      Poison.encode!(%{
+        encrypted: true,
+        public_key: public_key_str(public_key),
+        iv: iv,
+        tag: tag,
+        data: data
+      })
+
     File.mkdir_p(keys_dir())
-    filename = to_filename(address)
-    pem_bin = :libp2p_crypto.to_pem(private_key)
-    {iv, tag, data} = Crypto.encrypt(password, pem_bin)
-    file_content = Poison.encode!(%{
-                                     encrypted: true,
-                                     public_key: public_key_str(public_key),
-                                     iv: iv,
-                                     tag: tag,
-                                     data: data
-                                   })
-    File.write(filename, file_content, [:binary])
+    File.write(to_filename(address), file_content, [:binary])
     load_account(address)
   end
 
@@ -62,7 +67,7 @@ defmodule BlockchainNode.Accounts do
     File.mkdir_p(keys_dir())
     filename = to_filename(address)
     File.rm(filename)
-    AccountTransactions.update_transactions_state({ :delete, address })
+    AccountTransactions.update_transactions_state({:delete, address})
   end
 
   def pay(from_address, to_address, amount, password) do
@@ -72,7 +77,9 @@ defmodule BlockchainNode.Accounts do
         to = address_bin(to_address)
         fee = :blockchain_ledger_v1.transaction_fee(:blockchain_worker.ledger())
         :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
-      {:error, reason} -> {:error, reason}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -80,13 +87,16 @@ defmodule BlockchainNode.Accounts do
     {:ok, private_key, public_key} = load_keys(address, nil)
     pem_bin = :libp2p_crypto.to_pem(private_key)
     {iv, tag, data} = Crypto.encrypt(password, pem_bin)
-    file_content = Poison.encode!(%{
-                                     encrypted: true,
-                                     public_key: public_key_str(public_key),
-                                     iv: iv,
-                                     tag: tag,
-                                     data: data
-                                   })
+
+    file_content =
+      Poison.encode!(%{
+        encrypted: true,
+        public_key: public_key_str(public_key),
+        iv: iv,
+        tag: tag,
+        data: data
+      })
+
     delete(address)
     filename = to_filename(address)
     File.write(filename, file_content, [:binary])
@@ -95,9 +105,12 @@ defmodule BlockchainNode.Accounts do
 
   def rename(address, name) do
     filename = to_filename(address)
-    file_content = load_account_data(address)
-                   |> Map.merge(%{ "name" => name })
-                   |> Poison.encode!()
+
+    file_content =
+      load_account_data(address)
+      |> Map.merge(%{"name" => name})
+      |> Poison.encode!()
+
     File.write(filename, file_content, [:binary])
     load_account(address)
   end
@@ -113,29 +126,31 @@ defmodule BlockchainNode.Accounts do
     [keys_dir(), address] |> Enum.join("/")
   end
 
-  defp address_bin(address) do
-    :libp2p_crypto.b58_to_address(to_charlist(address))
+  defp address_bin(address_b58) do
+    address_b58 |> to_charlist() |> :libp2p_crypto.b58_to_address()
   end
 
   defp address_str(public_key) do
-    to_string(:libp2p_crypto.pubkey_to_b58(public_key))
+    public_key |> :libp2p_crypto.pubkey_to_b58() |> to_string()
   end
 
   defp public_key_str(public_key) do
-    Base.encode64(:erlang.term_to_binary(public_key)) #temp
+    # temp
+    Base.encode64(:erlang.term_to_binary(public_key))
   end
 
   # loads publically available info about an account
-  defp load_account(address) do
-    data = load_account_data(address)
+  defp load_account(address_b58) do
+    data = load_account_data(address_b58)
 
     %Account{
-      address: address,
+      address: address_b58,
       name: data["name"],
       public_key: data["public_key"],
-      balance: get_balance(address),
+      balance: get_balance(address_b58),
       encrypted: data["encrypted"],
-      transaction_fee: :blockchain_ledger_v1.transaction_fee(:blockchain_worker.ledger)
+      transaction_fee: :blockchain_ledger_v1.transaction_fee(:blockchain_worker.ledger()),
+      has_association: has_association?(address_b58)
     }
   end
 
@@ -149,6 +164,7 @@ defmodule BlockchainNode.Accounts do
   # decrypting if necessary
   def load_keys(address, _password = nil) do
     data = load_account_data(address)
+
     if data["encrypted"] do
       {:error, :encrypted}
     else
@@ -172,13 +188,64 @@ defmodule BlockchainNode.Accounts do
 
   def get_balance(address) do
     case :blockchain_worker.ledger() do
-      :undefined -> 0
+      :undefined ->
+        0
+
       ledger ->
         address
         |> to_charlist()
         |> :libp2p_crypto.b58_to_address()
         |> :blockchain_ledger_v1.find_entry(:blockchain_ledger_v1.entries(ledger))
         |> :blockchain_ledger_v1.balance()
+    end
+  end
+
+  def add_association(address_b58, password) do
+    case load_keys(address_b58, password) do
+      {:ok, private_key, public_key} ->
+        add_association({private_key, public_key})
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def add_association({private_key, public_key}) do
+    association =
+      :libp2p_peer.mk_association(
+        :libp2p_crypto.pubkey_to_address(public_key),
+        swarm_address(),
+        :libp2p_crypto.mk_sig_fun(private_key)
+      )
+
+    get_peerbook()
+    |> :libp2p_peerbook.add_association('wallet_account', association)
+  end
+
+  def has_association?(address_b58) do
+    get_peer()
+    |> :libp2p_peer.is_association('wallet_account', address_b58 |> address_bin())
+  end
+
+  def swarm_address() do
+    :blockchain_swarm.swarm() |> :libp2p_swarm.address()
+  end
+
+  def get_peer() do
+    {:ok, peer} = get_peerbook() |> :libp2p_peerbook.get(swarm_address())
+    peer
+  end
+
+  def get_peerbook() do
+    :blockchain_swarm.swarm() |> :libp2p_swarm.peerbook()
+  end
+
+  def associate_unencrypted_accounts() do
+    accounts = list()
+    for account <- accounts do
+      if !account.encrypted && !account.has_association do
+        add_association(account.address, nil)
+      end
     end
   end
 end

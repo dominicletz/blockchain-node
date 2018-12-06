@@ -19,6 +19,7 @@ defmodule BlockchainNode.Watcher do
 
   def init(state) do
     :ok = :blockchain_event.add_handler(self())
+    Accounts.associate_unencrypted_accounts()
     {:ok, state}
   end
 

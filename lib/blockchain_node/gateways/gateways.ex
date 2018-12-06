@@ -225,7 +225,7 @@ defmodule BlockchainNode.Gateways do
   end
 
   defp h3_to_geo(h3) do
-    :h3.to_geo(:h3.from_string(h3))
+    :h3.to_geo(h3)
   end
 
   defp within_bounds({lat, lng}, {{sw_lat, sw_lng}, {ne_lat, ne_lng}}) do
