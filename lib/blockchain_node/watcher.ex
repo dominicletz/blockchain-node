@@ -28,6 +28,7 @@ defmodule BlockchainNode.Watcher do
     Enum.each :pg2.get_members(:websocket_connections), fn pid ->
       send pid, Poison.encode!(payload(1))
     end
+    Accounts.associate_unencrypted_accounts()
     {:noreply, %{height: 1}}
   end
   def handle_info({:blockchain_event, {:add_block, hash, flag}}, state=%{height: previous_height}) do

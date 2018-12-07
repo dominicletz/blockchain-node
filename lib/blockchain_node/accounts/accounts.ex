@@ -241,10 +241,11 @@ defmodule BlockchainNode.Accounts do
   end
 
   def associate_unencrypted_accounts() do
-    accounts = list()
-    for account <- accounts do
-      if !account.encrypted && !account.has_association do
-        add_association(account.address, nil)
+    if :blockchain_worker.ledger() != :undefined do
+      for account <- list() do
+        if !account.encrypted && !account.has_association do
+          add_association(account.address, nil)
+        end
       end
     end
   end
