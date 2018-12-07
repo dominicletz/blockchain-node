@@ -5,8 +5,6 @@ defmodule BlockchainNode.SocketHandler do
     {:upgrade, :protocol, :cowboy_websocket}
   end
 
-  # @timeout 60000 # terminate if no activity for one minute
-
   #Called on websocket connection initialization.
   def websocket_init(_type, req, _opts) do
     :pg2.join(:websocket_connections, self())

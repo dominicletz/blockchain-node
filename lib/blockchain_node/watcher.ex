@@ -11,6 +11,7 @@ defmodule BlockchainNode.Watcher do
   alias BlockchainNode.Gateways
   alias BlockchainNode.Accounts.AccountTransactions
   alias BlockchainNode.Explorer
+  alias BlockchainNode.Helpers
   require Logger
 
   def start_link do
@@ -102,7 +103,8 @@ defmodule BlockchainNode.Watcher do
       type: "newBlock",
       status: %{
         nodeHeight: height,
-        chainHeight: height
+        chainHeight: height,
+        time: Helpers.last_block_time()
       },
       accounts: Accounts.list(),
       explorer: %{

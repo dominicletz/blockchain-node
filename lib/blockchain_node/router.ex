@@ -4,6 +4,7 @@ defmodule BlockchainNode.Router do
   alias BlockchainNode.Accounts
   alias BlockchainNode.Gateways
   alias BlockchainNode.Explorer
+  alias BlockchainNode.Helpers
 
   plug CORSPlug
   plug :match
@@ -14,14 +15,15 @@ defmodule BlockchainNode.Router do
   forward "/explorer", to: Explorer.Router
 
   get "/" do
-    height = case :blockchain_worker.height do
-      :undefined -> 0
-      height -> height
+    {height, time} = case :blockchain_worker.height do
+      :undefined -> {0, 0}
+      height -> {height, Helpers.last_block_time()}
     end
 
     send_resp(conn, 200, Poison.encode!(%{
       nodeHeight: height,
-      chainHeight: height
+      chainHeight: height,
+      time: time
     }))
 
   end
