@@ -23,7 +23,8 @@ defmodule BlockchainNode.Router do
     send_resp(conn, 200, Poison.encode!(%{
       nodeHeight: height,
       chainHeight: height,
-      time: time
+      time: time,
+      interval: Helpers.block_interval()
     }))
 
   end

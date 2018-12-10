@@ -104,7 +104,8 @@ defmodule BlockchainNode.Watcher do
       status: %{
         nodeHeight: height,
         chainHeight: height,
-        time: Helpers.last_block_time()
+        time: Helpers.last_block_time(),
+        interval: Helpers.block_interval()
       },
       accounts: Accounts.list(),
       explorer: %{
