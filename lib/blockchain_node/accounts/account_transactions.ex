@@ -11,7 +11,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
   def init() do
     case :blockchain_worker.blockchain() do
-      :undefined -> 
+      :undefined ->
         { %{}, :undefined }
       chain ->
         # TODO: This call would fail if the node hasn't synced and you'd get an empty list

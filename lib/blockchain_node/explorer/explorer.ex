@@ -1,4 +1,30 @@
 defmodule BlockchainNode.Explorer do
+  alias BlockchainNode.Helpers
+
+  @me __MODULE__
+  use Agent
+  require Logger
+
+  def start_link() do
+    Agent.start_link(&init/0, name: @me)
+  end
+
+  def init() do
+    fetch_state()
+  end
+
+  def update_state do
+    Agent.update(@me, fn _state -> fetch_state() end)
+  end
+
+  def fetch_state do
+    %{
+      blocks: get_blocks(),
+      transactions: get_transactions(),
+      height: Helpers.last_block_height
+    }
+  end
+
   def list_accounts do
     case :blockchain_worker.ledger() do
       :undefined ->
@@ -24,7 +50,23 @@ defmodule BlockchainNode.Explorer do
     end
   end
 
-  def list_blocks do
+  def list_blocks() do
+    Agent.get(@me, fn %{ blocks: blocks, height: height } ->
+      Range.new(height, height - 100)
+      |> Enum.map(fn i -> Map.get(blocks, i) end)
+      |> Enum.reject(&is_nil/1)
+    end)
+  end
+
+  def list_blocks(before) do
+    Agent.get(@me, fn %{ blocks: blocks } ->
+      Range.new(before - 1, before - 101)
+      |> Enum.map(fn i -> Map.get(blocks, i) end)
+      |> Enum.reject(&is_nil/1)
+    end)
+  end
+
+  def get_blocks do
     case :blockchain.blocks(:blockchain_worker.blockchain()) do
       blocks ->
         for {hash, block} <- blocks do
@@ -38,21 +80,41 @@ defmodule BlockchainNode.Explorer do
               |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
           }
         end
-        |> Enum.sort_by(fn block -> -block.height end)
+        |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
 
       _ ->
         []
     end
   end
 
-  def list_transactions do
+  def list_transactions() do
+    Agent.get(@me, fn %{ transactions: transactions } ->
+      max_index = transactions |> Map.keys() |> Enum.max(0)
+      Range.new(max_index, max_index - 100)
+      |> Enum.map(fn i -> Map.get(transactions, i) end)
+      |> Enum.reject(&is_nil/1)
+    end)
+  end
+
+  def list_transactions(before) do
+    Agent.get(@me, fn %{ transactions: transactions } ->
+      Range.new(before - 1, before - 101)
+      |> Enum.map(fn i -> Map.get(transactions, i) end)
+      |> Enum.reject(&is_nil/1)
+    end)
+  end
+
+  def get_transactions do
     case :blockchain.blocks(:blockchain_worker.blockchain()) do
       blocks ->
         for {hash, block} <- blocks do
           for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
         end
         |> List.flatten()
-        |> Enum.sort_by(fn txn -> -txn.height end)
+        |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
+        |> Enum.with_index()
+        |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
+        |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
 
       _ ->
         []

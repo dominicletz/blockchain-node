@@ -15,7 +15,7 @@ defmodule BlockchainNode.Router do
   forward "/explorer", to: Explorer.Router
 
   get "/" do
-    {height, time} = case :blockchain_worker.height do
+    {height, time} = case Helpers.last_block_height() do
       :undefined -> {0, 0}
       height -> {height, Helpers.last_block_time()}
     end

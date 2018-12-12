@@ -36,6 +36,7 @@ defmodule BlockchainNode.Application do
       supervisor(:blockchain_sup, [blockchain_sup_opts], id: :blockchain_sup, restart: :permanent),
       worker(BlockchainNode.Watcher, []),
       worker(BlockchainNode.Gateways, []),
+      worker(BlockchainNode.Explorer, []),
       worker(BlockchainNode.Accounts.AccountTransactions, [])
     ]
 

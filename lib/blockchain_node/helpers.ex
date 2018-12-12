@@ -1,4 +1,8 @@
 defmodule BlockchainNode.Helpers do
+  def last_block_height do
+    :blockchain_worker.height()
+  end
+
   def last_block_time do
     meta = :blockchain_worker.blockchain()
     |> :blockchain.head_block()
