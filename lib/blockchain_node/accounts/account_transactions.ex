@@ -1,5 +1,6 @@
 defmodule BlockchainNode.Accounts.AccountTransactions do
   alias BlockchainNode.Accounts
+  alias BlockchainNode.Helpers
 
   @me __MODULE__
   use Agent
@@ -14,15 +15,11 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
       :undefined ->
         { %{}, :undefined }
       chain ->
-        # TODO: This call would fail if the node hasn't synced and you'd get an empty list
-        # We have to ensure that the node is synced with a peer first before this is called
-        case :blockchain.blocks(chain) do
-          {:ok, blocks} when length(blocks) != 0 ->
-            new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
+        current_height = Helpers.last_block_height
+        new_head_hash = :blockchain.head_block(chain) |> :blockchain_block.hash_block()
 
-            parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], %{}, new_head_hash)
-          _ -> { %{}, :undefined }
-        end
+        blocks = :blockchain.build(:blockchain.genesis_block(chain), :blockchain.dir(chain), current_height)
+        parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], %{}, new_head_hash)
     end
   end
 
@@ -98,25 +95,20 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
   def update_transactions_state() do
     { _, hash } = Agent.get(@me, fn state -> state end)
 
-    last_head_hash =
-      case hash do
-        :undefined -> 
-          chain = :blockchain_worker.blockchain()
-          :blockchain.genesis_hash(chain)
-        _ -> hash
-      end
+    chain = :blockchain_worker.blockchain()
+    current_height = Helpers.last_block_height
+    new_head_hash = :blockchain.head_block(chain) |> :blockchain_block.hash_block()
 
-    case :blockchain.blocks(:blockchain_worker.blockchain()) do
-      {:ok, blocks} ->
-        new_head_hash = List.last(blocks) |> :blockchain_block.hash_block()
-
-        if hash === :undefined do
-          chain = :blockchain_worker.blockchain()
-          Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], txns_map, new_head_hash) end)
-        else
+    if hash === :undefined do
+      blocks = :blockchain.build(:blockchain.genesis_block(chain), :blockchain.dir(chain), current_height)
+      Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks([ :blockchain.genesis_block(chain) | blocks ], txns_map, new_head_hash) end)
+    else
+      case :blockchain.get_block(hash, :blockchain.dir(chain)) do
+        { :ok, last_block_parsed } ->
+          blocks = :blockchain.build(last_block_parsed, :blockchain.dir(chain), current_height)
           Agent.update(@me, fn { txns_map, _ } -> parse_transactions_from_blocks(blocks, txns_map, new_head_hash) end)
-        end
-      _ -> :undefined
+        _ -> :undefined
+      end
     end
   end
 
