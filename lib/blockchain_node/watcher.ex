@@ -123,7 +123,7 @@ defmodule BlockchainNode.Watcher do
               )
             ),
           fee: :blockchain_txn_assert_location_v1.fee(txn),
-          location: to_string(:blockchain_txn_assert_location_v1.location(txn)),
+          location: to_string(:h3.to_string(:blockchain_txn_assert_location_v1.location(txn))),
           token: token
         })
       )
