@@ -6,27 +6,31 @@ defmodule BlockchainNode.Router do
   alias BlockchainNode.Explorer
   alias BlockchainNode.Helpers
 
-  plug CORSPlug
-  plug :match
-  plug :dispatch
+  plug(CORSPlug)
+  plug(:match)
+  plug(:dispatch)
 
-  forward "/accounts", to: Accounts.Router
-  forward "/gateways", to: Gateways.Router
-  forward "/explorer", to: Explorer.Router
+  forward("/accounts", to: Accounts.Router)
+  forward("/gateways", to: Gateways.Router)
+  forward("/explorer", to: Explorer.Router)
 
   get "/" do
-    {height, time} = case Helpers.last_block_height() do
-      :undefined -> {0, 0}
-      height -> {height, Helpers.last_block_time()}
-    end
+    {height, time} =
+      case Helpers.last_block_height() do
+        :undefined -> {0, 0}
+        height -> {height, Helpers.last_block_time()}
+      end
 
-    send_resp(conn, 200, Poison.encode!(%{
-      nodeHeight: height,
-      chainHeight: height,
-      time: time,
-      interval: Helpers.block_interval()
-    }))
-
+    send_resp(
+      conn,
+      200,
+      Poison.encode!(%{
+        nodeHeight: height,
+        chainHeight: height,
+        time: time,
+        interval: Helpers.block_interval()
+      })
+    )
   end
 
   match _ do

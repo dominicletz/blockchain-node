@@ -21,7 +21,7 @@ defmodule BlockchainNode.Explorer do
     %{
       blocks: get_blocks(),
       transactions: get_transactions(),
-      height: Helpers.last_block_height
+      height: Helpers.last_block_height()
     }
   end
 
@@ -51,7 +51,7 @@ defmodule BlockchainNode.Explorer do
   end
 
   def list_blocks() do
-    Agent.get(@me, fn %{ blocks: blocks, height: height } ->
+    Agent.get(@me, fn %{blocks: blocks, height: height} ->
       Range.new(height, height - 100)
       |> Enum.map(fn i -> Map.get(blocks, i) end)
       |> Enum.reject(&is_nil/1)
@@ -59,7 +59,7 @@ defmodule BlockchainNode.Explorer do
   end
 
   def list_blocks(before) do
-    Agent.get(@me, fn %{ blocks: blocks } ->
+    Agent.get(@me, fn %{blocks: blocks} ->
       Range.new(before - 1, before - 101)
       |> Enum.map(fn i -> Map.get(blocks, i) end)
       |> Enum.reject(&is_nil/1)
@@ -67,29 +67,33 @@ defmodule BlockchainNode.Explorer do
   end
 
   def get_blocks do
-    case :blockchain.blocks(:blockchain_worker.blockchain()) do
-      blocks ->
-        for {hash, block} <- blocks do
-          %{
-            hash: hash |> Base.encode16(case: :lower),
-            height: :blockchain_block.height(block),
-            time: :blockchain_block.meta(block).block_time,
-            round: :blockchain_block.meta(block).hbbft_round,
-            transactions:
-              :blockchain_block.transactions(block)
-              |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
-          }
-        end
-        |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
-
-      _ ->
+    case :blockchain_worker.blockchain() do
+      :undefined ->
         []
+
+      chain ->
+        case :blockchain.blocks(chain) do
+          blocks ->
+            for {hash, block} <- blocks do
+              %{
+                hash: hash |> Base.encode16(case: :lower),
+                height: :blockchain_block.height(block),
+                time: :blockchain_block.meta(block).block_time,
+                round: :blockchain_block.meta(block).hbbft_round,
+                transactions:
+                  :blockchain_block.transactions(block)
+                  |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
+              }
+            end
+            |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
+        end
     end
   end
 
   def list_transactions() do
-    Agent.get(@me, fn %{ transactions: transactions } ->
+    Agent.get(@me, fn %{transactions: transactions} ->
       max_index = transactions |> Map.keys() |> Enum.max(0)
+
       Range.new(max_index, max_index - 100)
       |> Enum.map(fn i -> Map.get(transactions, i) end)
       |> Enum.reject(&is_nil/1)
@@ -97,7 +101,7 @@ defmodule BlockchainNode.Explorer do
   end
 
   def list_transactions(before) do
-    Agent.get(@me, fn %{ transactions: transactions } ->
+    Agent.get(@me, fn %{transactions: transactions} ->
       Range.new(before - 1, before - 101)
       |> Enum.map(fn i -> Map.get(transactions, i) end)
       |> Enum.reject(&is_nil/1)
@@ -105,19 +109,22 @@ defmodule BlockchainNode.Explorer do
   end
 
   def get_transactions do
-    case :blockchain.blocks(:blockchain_worker.blockchain()) do
-      blocks ->
-        for {hash, block} <- blocks do
-          for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
-        end
-        |> List.flatten()
-        |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
-        |> Enum.with_index()
-        |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
-        |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
-
-      _ ->
+    case :blockchain_worker.blockchain() do
+      :undefined ->
         []
+
+      chain ->
+        case :blockchain.blocks(chain) do
+          blocks ->
+            for {hash, block} <- blocks do
+              for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
+            end
+            |> List.flatten()
+            |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
+            |> Enum.with_index()
+            |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
+            |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
+        end
     end
   end
 
@@ -158,7 +165,7 @@ defmodule BlockchainNode.Explorer do
       payee: txn |> txn_mod.payee() |> addr_to_b58(),
       address: txn |> txn_mod.address() |> addr_to_b58(),
       preimage: txn |> txn_mod.preimage() |> to_hex(),
-      fee: txn |> txn_mod.fee(),
+      fee: txn |> txn_mod.fee()
     }
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
   end

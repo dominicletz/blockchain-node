@@ -1,9 +1,9 @@
 defmodule BlockchainNode.Crypto do
-
   def encrypt(password, data) when is_binary(data) do
     k = password |> generate_key()
     iv = :crypto.strong_rand_bytes(12)
-    {encrypted_data, tag} = :crypto.block_encrypt :aes_gcm, k, iv, {iv, data, 4}
+    {encrypted_data, tag} = :crypto.block_encrypt(:aes_gcm, k, iv, {iv, data, 4})
+
     {
       iv |> to_str(),
       tag |> to_str(),
@@ -20,19 +20,19 @@ defmodule BlockchainNode.Crypto do
   end
 
   defp to_str(bin) do
-    bin |> Base.encode64 |> URI.encode_www_form
+    bin |> Base.encode64() |> URI.encode_www_form()
   end
 
   defp from_str(str) do
-    {:ok, decoded} = str |> URI.decode_www_form |> Base.decode64
+    {:ok, decoded} = str |> URI.decode_www_form() |> Base.decode64()
     decoded
   end
 
-  defp generate_key(phrase), do: :crypto.hash(:sha, phrase) |> hexdigest |> String.slice(0,16)
+  defp generate_key(phrase), do: :crypto.hash(:sha, phrase) |> hexdigest |> String.slice(0, 16)
 
   defp hexdigest(binary) do
     :lists.flatten(for b <- :erlang.binary_to_list(binary), do: :io_lib.format("~2.16.0B", [b]))
-    |> :string.to_lower
-    |> List.to_string
+    |> :string.to_lower()
+    |> List.to_string()
   end
 end

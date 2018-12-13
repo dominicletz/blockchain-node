@@ -4,9 +4,13 @@ defmodule BlockchainNode.Explorer.Router do
 
   plug(CORSPlug)
   plug(:match)
-  plug Plug.Parsers, parsers: [:json],
-                     pass:  ["application/json"],
-                     json_decoder: Poison
+
+  plug(Plug.Parsers,
+    parsers: [:json],
+    pass: ["application/json"],
+    json_decoder: Poison
+  )
+
   plug(:dispatch)
 
   get "/accounts" do

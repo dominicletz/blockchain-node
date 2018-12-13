@@ -3,11 +3,15 @@ defmodule BlockchainNode.Accounts.Router do
   alias BlockchainNode.Accounts
   alias BlockchainNode.Accounts.AccountTransactions
 
-  plug :match
-  plug Plug.Parsers, parsers: [:json],
-                     pass:  ["application/json"],
-                     json_decoder: Poison
-  plug :dispatch
+  plug(:match)
+
+  plug(Plug.Parsers,
+    parsers: [:json],
+    pass: ["application/json"],
+    json_decoder: Poison
+  )
+
+  plug(:dispatch)
 
   get "/" do
     send_resp(conn, 200, Poison.encode!(Accounts.list()))
@@ -15,11 +19,12 @@ defmodule BlockchainNode.Accounts.Router do
 
   get "/transactions" do
     case conn.query_params do
-      %{ "page" => page, "per_page" => per_page } ->
+      %{"page" => page, "per_page" => per_page} ->
         page = String.to_integer(page)
         per_page = String.to_integer(per_page)
 
         send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(page, per_page)))
+
       _ ->
         send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(0, 10)))
     end
@@ -27,15 +32,29 @@ defmodule BlockchainNode.Accounts.Router do
 
   get "/:address/transactions" do
     case conn.query_params do
-      %{ "page" => page, "per_page" => per_page } ->
+      %{"page" => page, "per_page" => per_page} ->
         page = String.to_integer(page)
         per_page = String.to_integer(per_page)
 
-        send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, page, per_page)))
-      %{ "count" => count, "time_period" => time_period } ->
-        send_resp(conn, 200, Poison.encode!(AccountTransactions.balances_for_address(address, count, time_period)))
+        send_resp(
+          conn,
+          200,
+          Poison.encode!(AccountTransactions.transactions_for_address(address, page, per_page))
+        )
+
+      %{"count" => count, "time_period" => time_period} ->
+        send_resp(
+          conn,
+          200,
+          Poison.encode!(AccountTransactions.balances_for_address(address, count, time_period))
+        )
+
       _ ->
-        send_resp(conn, 200, Poison.encode!(AccountTransactions.transactions_for_address(address, 0, 10)))
+        send_resp(
+          conn,
+          200,
+          Poison.encode!(AccountTransactions.transactions_for_address(address, 0, 10))
+        )
     end
   end
 
@@ -59,18 +78,23 @@ defmodule BlockchainNode.Accounts.Router do
     params = conn.body_params
     amount = params["amount"] |> String.to_integer()
     to_address = params["toAddress"]
-    password = if params["password"] == "" do
-      nil
-    else
-      params["password"]
-    end
+
+    password =
+      if params["password"] == "" do
+        nil
+      else
+        params["password"]
+      end
 
     case Accounts.pay(from_address, to_address, amount, password) do
       {:error, reason} ->
-        error = Poison.encode!(%{
-          error: to_string(reason)
-        })
+        error =
+          Poison.encode!(%{
+            error: to_string(reason)
+          })
+
         send_resp(conn, 500, error)
+
       _ ->
         send_resp(conn, 200, "")
     end
@@ -99,18 +123,23 @@ defmodule BlockchainNode.Accounts.Router do
 
   post "/:address/associate" do
     params = conn.body_params
-    password = if params["password"] == "" do
-      nil
-    else
-      params["password"]
-    end
+
+    password =
+      if params["password"] == "" do
+        nil
+      else
+        params["password"]
+      end
 
     case Accounts.add_association(address, password) do
       {:error, reason} ->
-        error = Poison.encode!(%{
-          error: to_string(reason)
-        })
+        error =
+          Poison.encode!(%{
+            error: to_string(reason)
+          })
+
         send_resp(conn, 500, error)
+
       _ ->
         account = Accounts.show(address)
         send_resp(conn, 200, Poison.encode!(account))

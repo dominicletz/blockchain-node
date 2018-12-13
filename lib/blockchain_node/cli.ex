@@ -1,8 +1,7 @@
 defmodule BlockchainNode.CLI do
-
   def to_chars(list) do
     list
-    |> List.flatten
+    |> List.flatten()
     |> Enum.map(&String.to_charlist/1)
   end
 
@@ -24,6 +23,7 @@ defmodule BlockchainNode.CLI do
     case File.read(genesis_file) do
       {:ok, genesis_block} ->
         :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(genesis_block))
+
       {:error, reason} ->
         IO.inspect("Error, reason: #{reason}")
         {:error, reason}
@@ -34,6 +34,7 @@ defmodule BlockchainNode.CLI do
     case File.read(Path.join(:code.priv_dir(:blockchain_node), "genesis")) do
       {:ok, genesis_block} ->
         :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(genesis_block))
+
       {:error, reason} ->
         IO.inspect("Error, reason: #{reason}")
         {:error, reason}
@@ -48,6 +49,6 @@ defmodule BlockchainNode.CLI do
   end
 
   def list_accounts() do
-    BlockchainNode.Accounts.list
+    BlockchainNode.Accounts.list()
   end
 end
