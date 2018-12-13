@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Package do
     cmd("tar", ["-czf", "package/blockchain_node.tgz", "-C", "package/blockchain_node", "."])
   end
 
-  defp cmd(name, args \\ []) do
+  defp cmd(name, args) do
     {response, _code} = System.cmd(name, args)
     if response !== "", do: IO.puts(response)
   end

@@ -108,10 +108,6 @@ defmodule BlockchainNode.Gateways.Router do
     send_resp(conn, 200, Poison.encode!(coverage))
   end
 
-  get "/:address" do
-    send_resp(conn, 200, Poison.encode!(Gateways.show(address)))
-  end
-
   match _ do
     send_resp(conn, 404, "404")
   end

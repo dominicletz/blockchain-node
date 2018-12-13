@@ -67,23 +67,25 @@ defmodule BlockchainNode.Explorer do
   end
 
   def get_blocks do
-    case :blockchain.blocks(:blockchain_worker.blockchain()) do
-      blocks ->
-        for {hash, block} <- blocks do
-          %{
-            hash: hash |> Base.encode16(case: :lower),
-            height: :blockchain_block.height(block),
-            time: :blockchain_block.meta(block).block_time,
-            round: :blockchain_block.meta(block).hbbft_round,
-            transactions:
-              :blockchain_block.transactions(block)
-              |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
-          }
-        end
-        |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
-
-      _ ->
+    case :blockchain_worker.blockchain() do
+      :undefined ->
         []
+      chain ->
+        case :blockchain.blocks(chain) do
+          blocks ->
+            for {hash, block} <- blocks do
+              %{
+                hash: hash |> Base.encode16(case: :lower),
+                height: :blockchain_block.height(block),
+                time: :blockchain_block.meta(block).block_time,
+                round: :blockchain_block.meta(block).hbbft_round,
+                transactions:
+                :blockchain_block.transactions(block)
+                |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
+                }
+              end
+            |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
+        end
     end
   end
 
@@ -105,19 +107,21 @@ defmodule BlockchainNode.Explorer do
   end
 
   def get_transactions do
-    case :blockchain.blocks(:blockchain_worker.blockchain()) do
-      blocks ->
-        for {hash, block} <- blocks do
-          for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
-        end
-        |> List.flatten()
-        |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
-        |> Enum.with_index()
-        |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
-        |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
 
-      _ ->
-        []
+    case :blockchain_worker.blockchain() do
+      :undefined -> []
+      chain ->
+        case :blockchain.blocks(chain) do
+          blocks ->
+            for {hash, block} <- blocks do
+              for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
+            end
+            |> List.flatten()
+            |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
+            |> Enum.with_index()
+            |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
+            |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
+        end
     end
   end
 

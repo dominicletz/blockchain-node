@@ -106,11 +106,11 @@ defmodule BlockchainNode.Gateways do
       :undefined ->
         []
       ledger ->
-        for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, nonce, score}} <- :blockchain_ledger_v1.active_gateways(ledger) do
+        for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, _nonce, score}} <- :blockchain_ledger_v1.active_gateways(ledger) do
           {lat, lng}= case location do
             :undefined ->
               {nil, nil}
-            h3 ->
+            _h3 ->
               h3_to_geo(location)
           end
           %Gateway{
@@ -207,17 +207,6 @@ defmodule BlockchainNode.Gateways do
       _ ->
         { :error, "incorrectPasswordProvided" }
     end
-  end
-
-  defp generate_key do
-    {_private_key, public_key} = :libp2p_crypto.generate_keys()
-    address = :libp2p_crypto.pubkey_to_b58(public_key)
-    {address, public_key}
-  end
-
-  # XXX: definitely YOLO
-  defp generate_status do
-    Enum.random(~w(active active active inactive concensus))
   end
 
   defp geo_to_h3({_lat, _lng} = coordinates, resolution) do
