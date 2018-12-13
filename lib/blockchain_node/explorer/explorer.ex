@@ -34,7 +34,7 @@ defmodule BlockchainNode.Explorer do
         all_transactions = list_transactions()
 
         for {k, {:entry, nonce, balance}} <- :blockchain_ledger_v1.entries(ledger) do
-          address = k |> :libp2p_crypto.address_to_b58() |> to_string()
+          address = k |> Helpers.bin_address_to_b58_string()
 
           %{
             address: address,

@@ -208,8 +208,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
       payee =
         payee_bin
-        |> :libp2p_crypto.address_to_b58()
-        |> to_string()
+        |> Helpers.bin_address_to_b58_string()
 
       case Map.fetch(acc2, payee) do
         {:ok, list} ->
@@ -257,14 +256,12 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
       payer =
         txn
         |> :blockchain_txn_payment_v1.payer()
-        |> :libp2p_crypto.address_to_b58()
-        |> to_string()
+        |> Helpers.bin_address_to_b58_string()
 
       payee =
         txn
         |> :blockchain_txn_payment_v1.payee()
-        |> :libp2p_crypto.address_to_b58()
-        |> to_string()
+        |> Helpers.bin_address_to_b58_string()
 
       Enum.reduce([payer, payee], acc2, fn acct_address, acc3 ->
         case Map.fetch(acc3, acct_address) do

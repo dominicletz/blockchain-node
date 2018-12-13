@@ -1,6 +1,7 @@
 defmodule BlockchainNode.Gateways do
   alias BlockchainNode.Accounts
   alias BlockchainNode.Gateways.Gateway
+  alias BlockchainNode.Helpers
 
   @me __MODULE__
   use GenServer
@@ -124,8 +125,8 @@ defmodule BlockchainNode.Gateways do
             end
 
           %Gateway{
-            address: addr |> :libp2p_crypto.address_to_b58() |> to_string(),
-            owner: owner_address |> :libp2p_crypto.address_to_b58() |> to_string(),
+            address: addr |> Helpers.bin_address_to_b58_string(),
+            owner: owner_address |> Helpers.bin_address_to_b58_string(),
             blocks_mined: 0,
             h3_index: if(location == :undefined, do: nil, else: to_string(location)),
             lat: lat,
@@ -164,7 +165,7 @@ defmodule BlockchainNode.Gateways do
         %{txn: txn} =
           Enum.find(tokens, fn t ->
             t.token == token and
-              to_string(:libp2p_crypto.address_to_b58(t.address)) == owner_address
+               Helpers.bin_address_to_b58_string(t.address) == owner_address
           end)
 
         sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
@@ -225,7 +226,7 @@ defmodule BlockchainNode.Gateways do
   end
 
   defp geo_to_h3({_lat, _lng} = coordinates, resolution) do
-    :h3.from_geo(coordinates, resolution) |> :h3.to_string() |> to_string()
+    :h3.from_geo(coordinates, resolution) |> Helpers.to_h3_string()
   end
 
   defp h3_to_geo(h3) do

@@ -26,4 +26,14 @@ defmodule BlockchainNode.Helpers do
 
     Enum.sum(intervals) / length(intervals)
   end
+
+  def bin_address_to_b58_string(bin) do
+    bin
+    |> :libp2p_crypto.address_to_b58()
+    |> to_string()
+  end
+
+  def to_h3_string(bin) do
+    bin |> :h3.to_string() |> to_string()
+  end
 end
