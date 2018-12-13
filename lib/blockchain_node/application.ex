@@ -26,13 +26,17 @@ defmodule BlockchainNode.Application do
       {:seed_nodes, seed_nodes ++ seed_addresses},
       {:port, 0},
       {:num_consensus_members, 7},
-      {:base_dir, base_dir},
+      {:base_dir, base_dir}
     ]
 
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
-      Plug.Adapters.Cowboy.child_spec(scheme: :http, plug: Router, options: [port: 4001, dispatch: dispatch()]),
+      Plug.Adapters.Cowboy.child_spec(
+        scheme: :http,
+        plug: Router,
+        options: [port: 4001, dispatch: dispatch()]
+      ),
       supervisor(:blockchain_sup, [blockchain_sup_opts], id: :blockchain_sup, restart: :permanent),
       worker(BlockchainNode.Watcher, []),
       worker(BlockchainNode.Gateways, []),
@@ -48,17 +52,20 @@ defmodule BlockchainNode.Application do
 
   defp dispatch do
     [
-      {:_, [
-        {"/ws", SocketHandler, []},
-        {:_, Plug.Adapters.Cowboy.Handler, {Router, []}}
-      ]}
+      {:_,
+       [
+         {"/ws", SocketHandler, []},
+         {:_, Plug.Adapters.Cowboy.Handler, {Router, []}}
+       ]}
     ]
   end
 
   defp dns_to_addresses(seed_node_dns) do
-    List.flatten(for x <- :inet_res.lookup(seed_node_dns, :in, :txt),
-      String.starts_with?(to_string(x), "blockchain-seed-nodes="),
-      do: String.trim_leading(to_string(x), "blockchain-seed-nodes="))
+    List.flatten(
+      for x <- :inet_res.lookup(seed_node_dns, :in, :txt),
+          String.starts_with?(to_string(x), "blockchain-seed-nodes="),
+          do: String.trim_leading(to_string(x), "blockchain-seed-nodes=")
+    )
     |> List.to_string()
     |> String.split(",")
     |> Enum.map(&String.to_charlist/1)

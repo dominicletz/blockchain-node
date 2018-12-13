@@ -11,6 +11,7 @@ defmodule BlockchainNode.Gateways do
 
   def init(_) do
     :timer.send_interval(10000, :cleanup)
+
     {
       :ok,
       %{
@@ -80,14 +81,18 @@ defmodule BlockchainNode.Gateways do
 
   def get_location(address) do
     ## NOTE: address comes in as an atom, hence the conversion to string below
-    gw = get(:gateways)
-         |> Enum.find(fn gw -> gw.address == to_string(address) end)
+    gw =
+      get(:gateways)
+      |> Enum.find(fn gw -> gw.address == to_string(address) end)
+
     gw.location
   end
 
   def get_address(gateway) do
-    gw = get(:gateways)
-         |> Enum.find(fn gw -> gw == gateway end)
+    gw =
+      get(:gateways)
+      |> Enum.find(fn gw -> gw == gateway end)
+
     gw.address
   end
 
@@ -96,7 +101,7 @@ defmodule BlockchainNode.Gateways do
     resolution = min(resolution, 9)
 
     gateways
-    |> Enum.filter(fn g -> within_bounds({g.lat, g.lng}, bounds)  end)
+    |> Enum.filter(fn g -> within_bounds({g.lat, g.lng}, bounds) end)
     |> Enum.map(fn g -> geo_to_h3({g.lat, g.lng}, resolution) end)
     |> Enum.reduce(%{}, fn l, acc -> Map.update(acc, l, 1, &(&1 + 1)) end)
   end
@@ -105,40 +110,47 @@ defmodule BlockchainNode.Gateways do
     case :blockchain_worker.ledger() do
       :undefined ->
         []
+
       ledger ->
-        for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, _nonce, score}} <- :blockchain_ledger_v1.active_gateways(ledger) do
-          {lat, lng}= case location do
-            :undefined ->
-              {nil, nil}
-            _h3 ->
-              h3_to_geo(location)
-          end
+        for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, _nonce, score}} <-
+              :blockchain_ledger_v1.active_gateways(ledger) do
+          {lat, lng} =
+            case location do
+              :undefined ->
+                {nil, nil}
+
+              _h3 ->
+                h3_to_geo(location)
+            end
+
           %Gateway{
             address: addr |> :libp2p_crypto.address_to_b58() |> to_string(),
             owner: owner_address |> :libp2p_crypto.address_to_b58() |> to_string(),
             blocks_mined: 0,
-            h3_index: (if (location == :undefined), do: nil, else: to_string(location)),
+            h3_index: if(location == :undefined, do: nil, else: to_string(location)),
             lat: lat,
             lng: lng,
-            score: (if (score == :undefined), do: nil, else: score),
-            last_poc_challenge: (if (last_poc_challenge == :undefined), do: nil, else: last_poc_challenge),
-            status: (if (location == :undefined), do: "inactive", else: "active")
+            score: if(score == :undefined, do: nil, else: score),
+            last_poc_challenge:
+              if(last_poc_challenge == :undefined, do: nil, else: last_poc_challenge),
+            status: if(location == :undefined, do: "inactive", else: "active")
           }
         end
-      end
+    end
   end
 
   def registration_token(owner_address, password) do
     {:ok, _private_key, public_key} = Accounts.load_keys(owner_address, password)
     address = :libp2p_crypto.pubkey_to_address(public_key)
 
-    token = :crypto.strong_rand_bytes(32)
-    |> Base.encode64(padding: false)
+    token =
+      :crypto.strong_rand_bytes(32)
+      |> Base.encode64(padding: false)
 
     put_token(%{
-        token: token,
-        address: address,
-        time_created: DateTime.utc_now() |> DateTime.to_unix()
+      token: token,
+      address: address,
+      time_created: DateTime.utc_now() |> DateTime.to_unix()
     })
 
     token
@@ -149,9 +161,10 @@ defmodule BlockchainNode.Gateways do
       {:ok, private_key, _public_key} ->
         tokens = get(:tokens)
 
-        %{ txn: txn } =
+        %{txn: txn} =
           Enum.find(tokens, fn t ->
-            t.token == token and to_string(:libp2p_crypto.address_to_b58(t.address)) == owner_address
+            t.token == token and
+              to_string(:libp2p_crypto.address_to_b58(t.address)) == owner_address
           end)
 
         sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
@@ -160,9 +173,10 @@ defmodule BlockchainNode.Gateways do
         :ok = :blockchain_worker.submit_txn(:blockchain_txn_add_gateway_v1, signed_txn)
 
         delete_token(token)
-        { :ok, "gatewayRequestSubmitted" }
+        {:ok, "gatewayRequestSubmitted"}
+
       _ ->
-        { :error, "incorrectPasswordProvided" }
+        {:error, "incorrectPasswordProvided"}
     end
   end
 
@@ -195,7 +209,7 @@ defmodule BlockchainNode.Gateways do
       {:ok, private_key, _public_key} ->
         tokens = get(:tokens)
 
-        %{ txn: txn } = Enum.find(tokens, fn t -> t.token == token end)
+        %{txn: txn} = Enum.find(tokens, fn t -> t.token == token end)
 
         sig_fun = :libp2p_crypto.mk_sig_fun(private_key)
         signed_txn = :blockchain_txn_assert_location_v1.sign(txn, sig_fun)
@@ -203,9 +217,10 @@ defmodule BlockchainNode.Gateways do
         :ok = :blockchain_worker.submit_txn(:blockchain_txn_assert_location_v1, signed_txn)
 
         delete_token(token)
-        { :ok, "assertLocationSubmitted" }
+        {:ok, "assertLocationSubmitted"}
+
       _ ->
-        { :error, "incorrectPasswordProvided" }
+        {:error, "incorrectPasswordProvided"}
     end
   end
 

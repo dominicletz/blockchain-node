@@ -5,7 +5,7 @@ defmodule BlockchainNode.SocketHandler do
     {:upgrade, :protocol, :cowboy_websocket}
   end
 
-  #Called on websocket connection initialization.
+  # Called on websocket connection initialization.
   def websocket_init(_type, req, _opts) do
     :pg2.join(:websocket_connections, self())
     state = %{}
