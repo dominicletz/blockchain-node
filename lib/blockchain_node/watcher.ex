@@ -117,7 +117,7 @@ defmodule BlockchainNode.Watcher do
 
     case old_token do
       nil ->
-        add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location)
+        add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location, nil)
       _ ->
         old_location =
           old_token.txn
@@ -125,7 +125,7 @@ defmodule BlockchainNode.Watcher do
 
         if location != old_location && :h3.get_resolution(location) >= :h3.get_resolution(old_location) do
           Gateways.delete_token(old_token.token)
-          add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location)
+          add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location, old_token.token)
         end
     end
 
@@ -167,7 +167,7 @@ defmodule BlockchainNode.Watcher do
       time: current_time
     }
   end
-  defp add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location) do
+  defp add_assert_location_token(txn, type, ownerAddress, gatewayAddress, location, clearNotificationId) do
     token = :crypto.strong_rand_bytes(32)
       |> Base.encode64(padding: false)
     current_time = DateTime.utc_now() |> DateTime.to_unix()
@@ -186,7 +186,9 @@ defmodule BlockchainNode.Watcher do
         gatewayAddress: gatewayAddress,
         fee: :blockchain_txn_assert_location_v1.fee(txn),
         location: Helpers.to_h3_string(location),
-        token: token
+        token: token,
+        id: token,
+        clearNotificationId: clearNotificationId
       })
     end
   end
