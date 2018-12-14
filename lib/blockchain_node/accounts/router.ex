@@ -76,7 +76,7 @@ defmodule BlockchainNode.Accounts.Router do
 
   post "/:from_address/pay" do
     params = conn.body_params
-    amount = params["amount"] |> String.to_integer()
+    amount = params["amount"]
     to_address = params["toAddress"]
 
     password =
