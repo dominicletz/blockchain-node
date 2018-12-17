@@ -34,10 +34,8 @@ defmodule BlockchainNode.Explorer do
             []
           ledger ->
             all_transactions = list_transactions()
-    
             for {k, {:entry, nonce, balance}} <- :blockchain_ledger_v1.entries(ledger) do
               address = k |> Helpers.bin_address_to_b58_string()
-    
               %{
                 address: address,
                 balance: balance,

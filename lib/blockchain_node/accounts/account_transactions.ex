@@ -30,7 +30,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
         parse_transactions_from_blocks(
           [genesis_block | blocks],
           %{},
-          new_head_hash
+          new_head_hash,
+          chain
         )
     end
   end
@@ -134,7 +135,8 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
         parse_transactions_from_blocks(
           [genesis_block | blocks],
           txns_map,
-          new_head_hash
+          new_head_hash,
+          chain
         )
       end)
     else
@@ -143,7 +145,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
           blocks = :blockchain.build(last_block_parsed, chain, current_height)
 
           Agent.update(@me, fn {txns_map, _} ->
-            parse_transactions_from_blocks(blocks, txns_map, new_head_hash)
+            parse_transactions_from_blocks(blocks, txns_map, new_head_hash, chain)
           end)
 
         _ ->
@@ -158,7 +160,10 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     end)
   end
 
-  defp parse_transactions_from_blocks(blocks, state, new_head_hash) do
+  defp parse_transactions_from_blocks(blocks, state, new_head_hash, chain) do
+
+    {:ok, genesis_hash} = :blockchain.genesis_hash(chain)
+
     txns_by_height_list =
       Enum.reduce(blocks, [], fn b, acc ->
         coinbase_txns = :blockchain_block.coinbase_transactions(b)
@@ -166,10 +171,14 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
         height = :blockchain_block.height(b)
 
         time =
-          case Map.fetch(:blockchain_block.meta(b), :block_time) do
-            {:ok, block_time} -> block_time
-            # 2018 Jan 1st as temp date, change later when network launches!
-            _ -> 1_514_764_800
+          case new_head_hash == genesis_hash do
+            true -> 0
+            false ->
+              case Map.fetch(:blockchain_block.meta(b), :block_time) do
+                {:ok, block_time} -> block_time
+                  # 2018 Jan 1st as temp date, change later when network launches!
+                _ -> 1_514_764_800
+              end
           end
 
         cond do
