@@ -26,26 +26,29 @@ defmodule BlockchainNode.Explorer do
   end
 
   def list_accounts do
-    case :blockchain_worker.ledger() do
-      :undefined ->
-        []
-
-      ledger ->
-        all_transactions = list_transactions()
-
-        for {k, {:entry, nonce, balance}} <- :blockchain_ledger_v1.entries(ledger) do
-          address = k |> Helpers.bin_address_to_b58_string()
-
-          %{
-            address: address,
-            balance: balance,
-            nonce: nonce,
-            transactions:
-              all_transactions
-              |> Enum.filter(fn txn ->
-                txn[:payer] == address or txn[:payee] == address or txn[:address] == address
-              end)
-          }
+    case :blockchain_worker.blockchain() do
+      :undefined -> []
+      chain ->
+        case :blockchain.ledger(chain) do
+          :undefined ->
+            []
+          ledger ->
+            all_transactions = list_transactions()
+    
+            for {k, {:entry, nonce, balance}} <- :blockchain_ledger_v1.entries(ledger) do
+              address = k |> Helpers.bin_address_to_b58_string()
+    
+              %{
+                address: address,
+                balance: balance,
+                nonce: nonce,
+                transactions:
+                  all_transactions
+                  |> Enum.filter(fn txn ->
+                    txn[:payer] == address or txn[:payee] == address or txn[:address] == address
+                  end)
+              }
+            end
         end
     end
   end
@@ -120,7 +123,7 @@ defmodule BlockchainNode.Explorer do
               for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
             end
             |> List.flatten()
-            |> Enum.sort_by(fn txn -> [txn.height, txn.hash] end)
+            |> Enum.sort_by(fn txn -> [txn.height, txn.block_hash] end)
             |> Enum.with_index()
             |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
             |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)

@@ -1,6 +1,11 @@
 defmodule BlockchainNode.Helpers do
   def last_block_height do
-    :blockchain_worker.height()
+    case :blockchain_worker.blockchain() do
+      :undefined -> "undefined"
+      chain ->
+        {:ok, height} = :blockchain.height(chain)
+        height
+    end
   end
 
   def last_block_time do

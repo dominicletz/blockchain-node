@@ -73,11 +73,15 @@ defmodule BlockchainNode.Accounts do
   def pay(from_address, to_address, amount, password) do
     case load_keys(from_address, password) do
       {:ok, private_key, _public_key} ->
-        from = address_bin(from_address)
-        to = address_bin(to_address)
-        fee = :blockchain_ledger_v1.transaction_fee(:blockchain_worker.ledger())
-        :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
-
+        case :blockchain_worker.blockchain() do
+          :undefined ->
+            {:error, "undefined_blockchain"}
+          chain ->
+            from = address_bin(from_address)
+            to = address_bin(to_address)
+            fee = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+            :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
+        end
       {:error, reason} ->
         {:error, reason}
     end
@@ -143,13 +147,22 @@ defmodule BlockchainNode.Accounts do
   defp load_account(address_b58) do
     data = load_account_data(address_b58)
 
+    transaction_fee = case :blockchain_worker.blockchain() do
+      :undefined ->
+        # XXX: this should be something else, unknown? if there is no chain...
+        # {:error, "undefined_blockchain"}
+        -1
+      chain ->
+        :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+    end
+
     %Account{
       address: address_b58,
       name: data["name"],
       public_key: data["public_key"],
       balance: get_balance(address_b58),
       encrypted: data["encrypted"],
-      transaction_fee: :blockchain_ledger_v1.transaction_fee(:blockchain_worker.ledger()),
+      transaction_fee: transaction_fee,
       has_association: has_association?(address_b58)
     }
   end
@@ -187,16 +200,23 @@ defmodule BlockchainNode.Accounts do
   end
 
   def get_balance(address) do
-    case :blockchain_worker.ledger() do
+    case :blockchain_worker.blockchain() do
       :undefined ->
         0
-
-      ledger ->
-        address
-        |> to_charlist()
-        |> :libp2p_crypto.b58_to_address()
-        |> :blockchain_ledger_v1.find_entry(:blockchain_ledger_v1.entries(ledger))
-        |> :blockchain_ledger_v1.balance()
+      chain ->
+        case :blockchain.ledger(chain) do
+          :undefined ->
+            0
+          ledger ->
+            case address
+                 |> to_charlist()
+                 |> :libp2p_crypto.b58_to_address()
+                 |> :blockchain_ledger_v1.find_entry(ledger) do
+              {:ok, entry} ->
+                entry |> :blockchain_ledger_entry_v1.balance()
+              {:error, _reason} -> 0
+            end
+        end
     end
   end
 
@@ -241,12 +261,17 @@ defmodule BlockchainNode.Accounts do
   end
 
   def associate_unencrypted_accounts() do
-    if :blockchain_worker.ledger() != :undefined do
-      for account <- list() do
-        if !account.encrypted && !account.has_association do
-          add_association(account.address, nil)
+    case :blockchain_worker.blockchain() do
+      :undefined ->
+        {:error, "undefined_blockchain"}
+      chain ->
+        if :blockchain.ledger(chain) != :undefined do
+          for account <- list() do
+            if !account.encrypted && !account.has_association do
+              add_association(account.address, nil)
+            end
+          end
         end
-      end
     end
   end
 end

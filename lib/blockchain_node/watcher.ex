@@ -24,7 +24,7 @@ defmodule BlockchainNode.Watcher do
     {:ok, state}
   end
 
-  def handle_info({:blockchain_event, {:integrate_genesis_block, genesis_hash}}, _state) do
+  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, _state) do
     Logger.info("Got integrate_genesis_block with #{genesis_hash} event from blockchain_worker")
     Explorer.update_state()
     Accounts.associate_unencrypted_accounts()
@@ -44,22 +44,27 @@ defmodule BlockchainNode.Watcher do
       "Got add_block with hash: #{hash} event from blockchain_worker, sync_flag: #{flag}"
     )
 
-    current_height = :blockchain_worker.height()
-
-    case current_height != previous_height do
-      true ->
-        Explorer.update_state()
-        AccountTransactions.update_transactions_state()
-        Gateways.refresh_gateways()
-
-        Enum.each(:pg2.get_members(:websocket_connections), fn pid ->
-          send(pid, Poison.encode!(payload(current_height)))
-        end)
-
-        {:noreply, %{height: current_height}}
-
-      false ->
+    case :blockchain_worker.blockchain() do
+      :undefined ->
         {:noreply, state}
+      chain ->
+        {:ok, current_height} = :blockchain.height(chain)
+
+        case current_height != previous_height do
+          true ->
+            Explorer.update_state()
+            AccountTransactions.update_transactions_state()
+            Gateways.refresh_gateways()
+    
+            Enum.each(:pg2.get_members(:websocket_connections), fn pid ->
+              send(pid, Poison.encode!(payload(current_height)))
+            end)
+    
+            {:noreply, %{height: current_height}}
+    
+          false ->
+            {:noreply, state}
+        end    
     end
   end
 
