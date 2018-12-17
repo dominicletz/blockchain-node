@@ -73,20 +73,38 @@ defmodule BlockchainNode.Explorer do
         []
 
       chain ->
-        case :blockchain.blocks(chain) do
-          blocks ->
-            for {hash, block} <- blocks do
-              %{
-                hash: hash |> Base.encode16(case: :lower),
-                height: :blockchain_block.height(block),
+        {:ok, genesis_hash} = :blockchain.genesis_hash(chain)
+        case Map.to_list(:blockchain.blocks(chain)) do
+          block_list when length(block_list) == 1 ->
+            # ensure that this is the genesis block
+            [{hash, block}] = block_list
+            case hash == genesis_hash do
+              true ->
+                transactions = block
+                               |> :blockchain_block.transactions
+                               |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
+                {:ok, height} = :blockchain.height(chain)
+                %{hash: hash, height: height, time: 0, round: 0, transactions: transactions}
+              false ->
+                # something is very wrong
+                %{}
+            end
+
+          block_list ->
+            block_list
+            |> Enum.filter(fn {hash, _block} -> hash != genesis_hash end)
+            |> Enum.map(fn {hash, block} ->
+              transactions = block
+                             |> :blockchain_block.transactions
+                             |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
+              {:ok, height} = :blockchain.height(chain)
+              %{hash: hash,
+                height: height,
                 time: :blockchain_block.meta(block).block_time,
                 round: :blockchain_block.meta(block).hbbft_round,
-                transactions:
-                  :blockchain_block.transactions(block)
-                  |> Enum.map(fn txn -> parse_txn(hash, block, txn) end)
-              }
-            end
-            |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
+                transactions: transactions}
+            end)
+            |> Enum.reduce(%{}, fn obj, acc -> Map.put(acc, obj.height, obj) end)
         end
     end
   end
@@ -118,7 +136,7 @@ defmodule BlockchainNode.Explorer do
         case :blockchain.blocks(chain) do
           blocks ->
             for {hash, block} <- blocks do
-              for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn)
+              for txn <- :blockchain_block.transactions(block), do: parse_txn(hash, block, txn, chain)
             end
             |> List.flatten()
             |> Enum.sort_by(fn txn -> [txn.height, txn.block_hash] end)
@@ -129,11 +147,11 @@ defmodule BlockchainNode.Explorer do
     end
   end
 
-  defp parse_txn(block_hash, block, txn) do
-    parse_txn(:blockchain_transactions.type(txn), block_hash, block, txn)
+  defp parse_txn(block_hash, block, txn, chain) do
+    parse_txn(:blockchain_transactions.type(txn), block_hash, block, txn, chain)
   end
 
-  defp parse_txn(:blockchain_txn_payment_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_payment_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "payment",
       hash: txn |> txn_mod.hash() |> addr_to_b58(),
@@ -143,10 +161,10 @@ defmodule BlockchainNode.Explorer do
       fee: txn |> txn_mod.fee(),
       nonce: txn |> txn_mod.nonce()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_create_htlc_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_create_htlc_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "create_htlc",
       payer: txn |> txn_mod.payer() |> addr_to_b58(),
@@ -157,10 +175,10 @@ defmodule BlockchainNode.Explorer do
       timelock: txn |> txn_mod.timelock(),
       hashlock: txn |> txn_mod.hashlock() |> to_hex()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_redeem_htlc_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_redeem_htlc_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "redeem_htlc",
       payee: txn |> txn_mod.payee() |> addr_to_b58(),
@@ -168,19 +186,19 @@ defmodule BlockchainNode.Explorer do
       preimage: txn |> txn_mod.preimage() |> to_hex(),
       fee: txn |> txn_mod.fee()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_add_gateway_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_add_gateway_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "add_gateway",
       gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
       owner: txn |> txn_mod.owner_address() |> addr_to_b58()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_assert_location_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_assert_location_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "assert_location",
       gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
@@ -189,32 +207,54 @@ defmodule BlockchainNode.Explorer do
       nonce: txn |> txn_mod.nonce(),
       fee: txn |> txn_mod.fee()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_oui_v1 = txn_mod, block_hash, block, txn) do
+  defp parse_txn(:blockchain_txn_oui_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "oui",
       oui: txn |> txn_mod.oui() |> to_hex(),
       owner: txn |> txn_mod.owner() |> addr_to_b58(),
       fee: txn |> txn_mod.fee()
     }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn))
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(unknown_type, block_hash, block, unknown_txn) do
+  defp parse_txn(:blockchain_txn_coinbase_v1 = txn_mod, block_hash, block, txn, chain) do
+    %{
+      type: "coinbase",
+      payee: txn |> txn_mod.payee(),
+      amount: txn |> txn_mod.amount()
+    }
+    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
+  end
+
+  defp parse_txn(unknown_type, block_hash, block, unknown_txn, chain) do
     %{
       type: "unknown"
     }
-    |> Map.merge(parse_txn_common(unknown_type, block_hash, block, unknown_txn))
+    |> Map.merge(parse_txn_common(unknown_type, block_hash, block, unknown_txn, chain))
   end
 
-  defp parse_txn_common(txn_mod, block_hash, block, txn) do
-    attrs = %{
-      block_hash: block_hash |> to_hex(),
-      height: :blockchain_block.height(block),
-      time: :blockchain_block.meta(block).block_time
-    }
+  defp parse_txn_common(txn_mod, block_hash, block, txn, chain) do
+
+    {:ok, genesis_hash} = :blockchain.genesis_hash(chain)
+
+    attrs =
+      case block_hash == genesis_hash do
+        true ->
+          %{
+            block_hash: block_hash |> to_hex(),
+            height: :blockchain_block.height(block),
+            time: 0
+          }
+        false ->
+          %{
+            block_hash: block_hash |> to_hex(),
+            height: :blockchain_block.height(block),
+            time: :blockchain_block.meta(block).block_time
+          }
+      end
 
     if :erlang.function_exported(txn_mod, :hash, 1) do
       attrs
