@@ -9,12 +9,18 @@ defmodule BlockchainNode.Helpers do
   end
 
   def last_block_time do
-    meta =
-      :blockchain_worker.blockchain()
-      |> :blockchain.head_block()
-      |> :blockchain_block.meta()
-
-    meta.block_time
+    case :blockchain_worker.blockchain() do
+      :undefined -> 0
+      chain ->
+        {:ok, genesis_block} = chain |> :blockchain.genesis_block
+        {:ok, head_block} = chain |> :blockchain.head_block
+        case head_block == genesis_block do
+          true -> 0
+          false ->
+            meta = head_block |> :blockchain_block.meta
+            meta.block_time
+        end
+    end
   end
 
   def block_interval do
