@@ -79,7 +79,7 @@ defmodule BlockchainNode.Accounts do
           chain ->
             from = address_bin(from_address)
             to = address_bin(to_address)
-            fee = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+            {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
             :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
         end
       {:error, reason} ->
@@ -147,13 +147,15 @@ defmodule BlockchainNode.Accounts do
   defp load_account(address_b58) do
     data = load_account_data(address_b58)
 
-    transaction_fee = case :blockchain_worker.blockchain() do
-      :undefined ->
-        # XXX: this should be something else, unknown? if there is no chain...
-        # {:error, "undefined_blockchain"}
-        -1
-      chain ->
-        :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+    transaction_fee =
+      case :blockchain_worker.blockchain() do
+        :undefined ->
+          # XXX: this should be something else, unknown? if there is no chain...
+          # {:error, "undefined_blockchain"}
+          -1
+        chain ->
+          {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+          fee
     end
 
     %Account{
