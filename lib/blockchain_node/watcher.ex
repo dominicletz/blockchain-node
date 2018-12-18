@@ -46,7 +46,7 @@ defmodule BlockchainNode.Watcher do
 
     case :blockchain_worker.blockchain() do
       :undefined ->
-        {:noreply, state}
+        {:noreply, %{height: :undefined}}
       chain ->
         {:ok, current_height} = :blockchain.height(chain)
 
@@ -55,16 +55,13 @@ defmodule BlockchainNode.Watcher do
             Explorer.update_state()
             AccountTransactions.update_transactions_state()
             Gateways.refresh_gateways()
-    
             Enum.each(:pg2.get_members(:websocket_connections), fn pid ->
               send(pid, Poison.encode!(payload(current_height)))
             end)
-    
             {:noreply, %{height: current_height}}
-    
           false ->
             {:noreply, state}
-        end    
+        end
     end
   end
 

@@ -73,38 +73,33 @@ defmodule BlockchainNode.Explorer do
         []
 
       chain ->
-        {:ok, genesis_hash} = :blockchain.genesis_hash(chain)
-        case Map.to_list(:blockchain.blocks(chain)) do
-          block_list when length(block_list) == 1 ->
-            # ensure that this is the genesis block
-            [{hash, block}] = block_list
-            case hash == genesis_hash do
-              true ->
-                transactions = block
-                               |> :blockchain_block.transactions
-                               |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
-                {:ok, height} = :blockchain.height(chain)
-                %{hash: hash, height: height, time: 0, round: 0, transactions: transactions}
-              false ->
-                # something is very wrong
-                %{}
+        case :blockchain.blocks(chain) do
+          blocks ->
+            for {hash, block} <- blocks do
+              case :blockchain_block.is_genesis(block) do
+                true ->
+                  %{
+                    hash: hash |> Base.encode16(case: :lower),
+                      height: :blockchain_block.height(block),
+                      time: 0,
+                      round: 0,
+                      transactions:
+                      :blockchain_block.transactions(block)
+                      |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
+                      }
+                false ->
+                  %{
+                    hash: hash |> Base.encode16(case: :lower),
+                    height: :blockchain_block.height(block),
+                    time: :blockchain_block.meta(block).block_time,
+                    round: :blockchain_block.meta(block).hbbft_round,
+                    transactions:
+                      :blockchain_block.transactions(block)
+                      |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
+                  }
+              end
             end
-
-          block_list ->
-            block_list
-            |> Enum.filter(fn {hash, _block} -> hash != genesis_hash end)
-            |> Enum.map(fn {hash, block} ->
-              transactions = block
-                             |> :blockchain_block.transactions
-                             |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
-              {:ok, height} = :blockchain.height(chain)
-              %{hash: hash,
-                height: height,
-                time: :blockchain_block.meta(block).block_time,
-                round: :blockchain_block.meta(block).hbbft_round,
-                transactions: transactions}
-            end)
-            |> Enum.reduce(%{}, fn obj, acc -> Map.put(acc, obj.height, obj) end)
+            |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
         end
     end
   end
@@ -131,7 +126,6 @@ defmodule BlockchainNode.Explorer do
     case :blockchain_worker.blockchain() do
       :undefined ->
         []
-
       chain ->
         case :blockchain.blocks(chain) do
           blocks ->
@@ -223,7 +217,7 @@ defmodule BlockchainNode.Explorer do
   defp parse_txn(:blockchain_txn_coinbase_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "coinbase",
-      payee: txn |> txn_mod.payee(),
+      payee: txn |> txn_mod.payee() |> addr_to_b58(),
       amount: txn |> txn_mod.amount()
     }
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
