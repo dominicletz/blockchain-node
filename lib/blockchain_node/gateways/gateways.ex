@@ -108,34 +108,38 @@ defmodule BlockchainNode.Gateways do
   end
 
   defp get_active_gateways() do
-    case :blockchain_worker.ledger() do
-      :undefined ->
-        []
 
-      ledger ->
-        for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, _nonce, score}} <-
-              :blockchain_ledger_v1.active_gateways(ledger) do
-          {lat, lng} =
-            case location do
-              :undefined ->
-                {nil, nil}
-
-              _h3 ->
-                h3_to_geo(location)
+    case :blockchain_worker.blockchain() do
+      :undefined -> []
+      chain ->
+        case :blockchain.ledger(chain) do
+          :undefined ->
+            []
+          ledger ->
+            for {addr, {:gateway_v1, owner_address, location, last_poc_challenge, _nonce, score}} <-
+                  :blockchain_ledger_v1.active_gateways(ledger) do
+              {lat, lng} =
+                case location do
+                  :undefined ->
+                    {nil, nil}
+    
+                  _h3 ->
+                    h3_to_geo(location)
+                end
+    
+              %Gateway{
+                address: addr |> Helpers.bin_address_to_b58_string(),
+                owner: owner_address |> Helpers.bin_address_to_b58_string(),
+                blocks_mined: 0,
+                h3_index: if(location == :undefined, do: nil, else: to_string(location)),
+                lat: lat,
+                lng: lng,
+                score: if(score == :undefined, do: nil, else: score),
+                last_poc_challenge:
+                  if(last_poc_challenge == :undefined, do: nil, else: last_poc_challenge),
+                status: if(location == :undefined, do: "inactive", else: "active")
+              }
             end
-
-          %Gateway{
-            address: addr |> Helpers.bin_address_to_b58_string(),
-            owner: owner_address |> Helpers.bin_address_to_b58_string(),
-            blocks_mined: 0,
-            h3_index: if(location == :undefined, do: nil, else: to_string(location)),
-            lat: lat,
-            lng: lng,
-            score: if(score == :undefined, do: nil, else: score),
-            last_poc_challenge:
-              if(last_poc_challenge == :undefined, do: nil, else: last_poc_challenge),
-            status: if(location == :undefined, do: "inactive", else: "active")
-          }
         end
     end
   end

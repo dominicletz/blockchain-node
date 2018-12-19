@@ -17,19 +17,21 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
       chain ->
         current_height = Helpers.last_block_height()
-        new_head_hash = :blockchain.head_block(chain) |> :blockchain_block.hash_block()
+        {:ok, new_head_hash} = chain |> :blockchain.head_hash
+        {:ok, genesis_block} = chain |> :blockchain.genesis_block
 
         blocks =
           :blockchain.build(
-            :blockchain.genesis_block(chain),
-            :blockchain.dir(chain),
+            genesis_block,
+            chain,
             current_height
           )
 
         parse_transactions_from_blocks(
-          [:blockchain.genesis_block(chain) | blocks],
+          [genesis_block | blocks],
           %{},
-          new_head_hash
+          new_head_hash,
+          chain
         )
     end
   end
@@ -118,30 +120,32 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
     chain = :blockchain_worker.blockchain()
     current_height = Helpers.last_block_height()
-    new_head_hash = :blockchain.head_block(chain) |> :blockchain_block.hash_block()
+    {:ok, new_head_hash} = chain |> :blockchain.head_hash
+    {:ok, genesis_block} = chain |> :blockchain.genesis_block
 
     if hash === :undefined do
       blocks =
         :blockchain.build(
-          :blockchain.genesis_block(chain),
-          :blockchain.dir(chain),
+          genesis_block,
+          chain,
           current_height
         )
 
       Agent.update(@me, fn {txns_map, _} ->
         parse_transactions_from_blocks(
-          [:blockchain.genesis_block(chain) | blocks],
+          [genesis_block | blocks],
           txns_map,
-          new_head_hash
+          new_head_hash,
+          chain
         )
       end)
     else
-      case :blockchain.get_block(hash, :blockchain.dir(chain)) do
+      case :blockchain.get_block(hash, chain) do
         {:ok, last_block_parsed} ->
-          blocks = :blockchain.build(last_block_parsed, :blockchain.dir(chain), current_height)
+          blocks = :blockchain.build(last_block_parsed, chain, current_height)
 
           Agent.update(@me, fn {txns_map, _} ->
-            parse_transactions_from_blocks(blocks, txns_map, new_head_hash)
+            parse_transactions_from_blocks(blocks, txns_map, new_head_hash, chain)
           end)
 
         _ ->
@@ -156,7 +160,10 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
     end)
   end
 
-  defp parse_transactions_from_blocks(blocks, state, new_head_hash) do
+  defp parse_transactions_from_blocks(blocks, state, new_head_hash, chain) do
+
+    {:ok, genesis_hash} = :blockchain.genesis_hash(chain)
+
     txns_by_height_list =
       Enum.reduce(blocks, [], fn b, acc ->
         coinbase_txns = :blockchain_block.coinbase_transactions(b)
@@ -164,10 +171,14 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
         height = :blockchain_block.height(b)
 
         time =
-          case Map.fetch(:blockchain_block.meta(b), :block_time) do
-            {:ok, block_time} -> block_time
-            # 2018 Jan 1st as temp date, change later when network launches!
-            _ -> 1_514_764_800
+          case new_head_hash == genesis_hash do
+            true -> 1_514_764_800
+            false ->
+              case Map.fetch(:blockchain_block.meta(b), :block_time) do
+                {:ok, block_time} -> block_time
+                  # 2018 Jan 1st as temp date, change later when network launches!
+                _ -> 1_514_764_800
+              end
           end
 
         cond do
