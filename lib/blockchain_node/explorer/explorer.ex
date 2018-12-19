@@ -179,15 +179,6 @@ defmodule BlockchainNode.Explorer do
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
-  defp parse_txn(:blockchain_txn_gen_gateway_v1 = txn_mod, block_hash, block, txn, chain) do
-    %{
-      type: "gen_gateway",
-      gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
-      owner: txn |> txn_mod.owner_address() |> addr_to_b58()
-    }
-    |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
-  end
-
   defp parse_txn(:blockchain_txn_assert_location_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "assert_location",
