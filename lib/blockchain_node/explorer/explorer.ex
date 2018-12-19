@@ -76,28 +76,15 @@ defmodule BlockchainNode.Explorer do
         case :blockchain.blocks(chain) do
           blocks ->
             for {hash, block} <- blocks do
-              case :blockchain_block.is_genesis(block) do
-                true ->
-                  %{
-                    hash: hash |> Base.encode16(case: :lower),
-                      height: :blockchain_block.height(block),
-                      time: 0,
-                      round: 0,
-                      transactions:
-                      :blockchain_block.transactions(block)
-                      |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
-                      }
-                false ->
-                  %{
-                    hash: hash |> Base.encode16(case: :lower),
-                    height: :blockchain_block.height(block),
-                    time: :blockchain_block.meta(block).block_time,
-                    round: :blockchain_block.meta(block).hbbft_round,
-                    transactions:
-                      :blockchain_block.transactions(block)
-                      |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
-                  }
-              end
+              %{
+                hash: hash |> Base.encode16(case: :lower),
+                height: :blockchain_block.height(block),
+                time: :blockchain_block.meta(block).block_time,
+                round: :blockchain_block.meta(block).hbbft_round,
+                transactions:
+                  :blockchain_block.transactions(block)
+                  |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
+              }
             end
             |> Enum.reduce(%{}, fn b, acc -> Map.put(acc, b.height, b) end)
         end
@@ -221,6 +208,27 @@ defmodule BlockchainNode.Explorer do
       amount: txn |> txn_mod.amount()
     }
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
+  end
+
+  defp parse_txn(:blockchain_txn_gen_gateway_v1 = txn_mod, block_hash, block, txn, chain) do
+    map =
+      case txn_mod.location(txn) do
+        :undefined ->
+          %{
+            type: "gen_gateway",
+            gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
+            owner: txn |> txn_mod.owner_address() |> addr_to_b58()
+          }
+        location ->
+          %{
+            type: "gen_gateway",
+            gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
+            owner: txn |> txn_mod.owner_address() |> addr_to_b58(),
+            location: location
+          }
+      end
+
+    map |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
 
   defp parse_txn(unknown_type, block_hash, block, unknown_txn, chain) do
