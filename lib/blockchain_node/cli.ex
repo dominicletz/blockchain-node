@@ -20,10 +20,9 @@ defmodule BlockchainNode.CLI do
   end
 
   def load_genesis(genesis_file) do
-    case :file.consult(genesis_file) do
-      {:ok, [binary_genesis_block]} ->
-        :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(binary_genesis_block))
-
+    case File.read(genesis_file) do
+      {:ok, genesis_block} ->
+        :blockchain_worker.integrate_genesis_block(:blockchain_block.deserialize(genesis_block))
       {:error, reason} ->
         IO.inspect("Error, reason: #{reason}")
         {:error, reason}
@@ -31,14 +30,7 @@ defmodule BlockchainNode.CLI do
   end
 
   def load_genesis do
-    case File.read(Path.join(:code.priv_dir(:blockchain_node), "genesis")) do
-      {:ok, genesis_block} ->
-        :blockchain_worker.integrate_genesis_block(:erlang.binary_to_term(genesis_block))
-
-      {:error, reason} ->
-        IO.inspect("Error, reason: #{reason}")
-        {:error, reason}
-    end
+    load_genesis(Path.join(:code.priv_dir(:blockchain_node), "genesis"))
   end
 
   def height() do
