@@ -172,7 +172,7 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
         time =
           case new_head_hash == genesis_hash do
-            true -> 0
+            true -> 1_514_764_800
             false ->
               case Map.fetch(:blockchain_block.meta(b), :block_time) do
                 {:ok, block_time} -> block_time
