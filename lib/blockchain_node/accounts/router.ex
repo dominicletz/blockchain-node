@@ -86,12 +86,7 @@ defmodule BlockchainNode.Accounts.Router do
         params["password"]
       end
 
-    nonce =
-      if params["nonce"] != "" do
-        String.to_integer(params["nonce"])
-      else
-        nil
-      end        
+    nonce = params["nonce"]
 
     case Accounts.pay(from_address, to_address, amount, password, nonce) do
       {:error, reason} ->
