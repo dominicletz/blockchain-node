@@ -162,11 +162,14 @@ defmodule BlockchainNode.Accounts do
           fee
     end
 
+    balance = get_balance(address_b58)
+
     %Account{
       address: address_b58,
       name: data["name"],
       public_key: data["public_key"],
-      balance: get_balance(address_b58),
+      balance: balance[:balance],
+      nonce: balance[:nonce],
       encrypted: data["encrypted"],
       transaction_fee: transaction_fee,
       has_association: has_association?(address_b58)
@@ -219,7 +222,7 @@ defmodule BlockchainNode.Accounts do
                  |> :libp2p_crypto.b58_to_address()
                  |> :blockchain_ledger_v1.find_entry(ledger) do
               {:ok, entry} ->
-                entry |> :blockchain_ledger_entry_v1.balance()
+                res = %{:balance => entry |> :blockchain_ledger_entry_v1.balance(), :nonce => entry |> :blockchain_ledger_entry_v1.nonce()}
               {:error, _reason} -> 0
             end
         end
