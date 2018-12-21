@@ -30,7 +30,7 @@ defmodule BlockchainNode.MixProject do
   defp deps do
     [
       {:distillery, "~> 2.0"},
-      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "master"},
+      {:blockchain, git: "git@github.com:helium/blockchain-core.git", branch: "ah/pass_nonce_to_payment"},
       {:cuttlefish, git: "https://github.com/helium/cuttlefish.git", branch: "develop", override: true},
       {:h3, git: "https://github.com/helium/erlang-h3.git", branch: "master"},
       {:cowboy, "~> 1.0.0"},

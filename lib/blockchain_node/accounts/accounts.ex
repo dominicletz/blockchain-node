@@ -70,7 +70,7 @@ defmodule BlockchainNode.Accounts do
     AccountTransactions.update_transactions_state({:delete, address})
   end
 
-  def pay(from_address, to_address, amount, password) do
+  def pay(from_address, to_address, amount, password, nonce) do
     case load_keys(from_address, password) do
       {:ok, private_key, _public_key} ->
         case :blockchain_worker.blockchain() do
@@ -80,7 +80,11 @@ defmodule BlockchainNode.Accounts do
             from = address_bin(from_address)
             to = address_bin(to_address)
             {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
-            :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
+            if nonce do
+              :blockchain_worker.payment_txn(private_key, from, to, amount, fee, nonce)
+            else
+              :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
+            end
         end
       {:error, reason} ->
         {:error, reason}
