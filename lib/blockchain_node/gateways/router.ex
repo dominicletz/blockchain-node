@@ -91,7 +91,7 @@ defmodule BlockchainNode.Gateways.Router do
         params["password"]
       end
 
-    case Gateways.confirm_assert_location(address, password, params["token"]) do
+    case Gateways.confirm_assert_location(address, params["gateway_address"], password, params["token"]) do
       {:error, "incorrectPasswordProvided"} ->
         send_resp(conn, 401, "")
 

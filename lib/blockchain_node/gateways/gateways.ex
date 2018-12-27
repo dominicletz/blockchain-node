@@ -4,6 +4,7 @@ defmodule BlockchainNode.Gateways do
   alias BlockchainNode.Helpers
 
   @me __MODULE__
+  @timeToLive 3
   use GenServer
 
   def start_link() do
@@ -47,8 +48,8 @@ defmodule BlockchainNode.Gateways do
   end
 
   def handle_info(:cleanup, state) do
-    current_time = DateTime.utc_now() |> DateTime.to_unix()
-    valid_tokens = Enum.filter(state.tokens, fn t -> current_time - t.time_created < 300 end)
+    current_height = Helpers.last_block_height()
+    valid_tokens = Enum.filter(state.tokens, fn t -> current_height - t.height_created < @timeToLive end)
     new_state = %{state | tokens: valid_tokens}
     {:noreply, new_state}
   end
@@ -122,11 +123,11 @@ defmodule BlockchainNode.Gateways do
                 case location do
                   :undefined ->
                     {nil, nil}
-    
+
                   _h3 ->
                     h3_to_geo(location)
                 end
-    
+
               %Gateway{
                 address: addr |> Helpers.bin_address_to_b58_string(),
                 owner: owner_address |> Helpers.bin_address_to_b58_string(),
@@ -155,7 +156,7 @@ defmodule BlockchainNode.Gateways do
     put_token(%{
       token: token,
       address: address,
-      time_created: DateTime.utc_now() |> DateTime.to_unix()
+      height_created: Helpers.last_block_height()
     })
 
     token
@@ -209,7 +210,7 @@ defmodule BlockchainNode.Gateways do
     update(:tokens, Enum.reject(tokens, fn t -> t.token == token end))
   end
 
-  def confirm_assert_location(owner_address, password, token) do
+  def confirm_assert_location(owner_address, gateway_address, password, token) do
     case Accounts.load_keys(owner_address, password) do
       {:ok, private_key, _public_key} ->
         tokens = get(:tokens)
@@ -220,6 +221,12 @@ defmodule BlockchainNode.Gateways do
         signed_txn = :blockchain_txn_assert_location_v1.sign(txn, sig_fun)
 
         :ok = :blockchain_worker.submit_txn(:blockchain_txn_assert_location_v1, signed_txn)
+
+        put_token(%{
+          txn: txn,
+          type: "assertLocationSubmitted",
+          height_created: Helpers.last_block_height()
+        })
 
         delete_token(token)
         {:ok, "assertLocationSubmitted"}
