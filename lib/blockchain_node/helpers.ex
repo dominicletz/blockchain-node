@@ -1,7 +1,9 @@
 defmodule BlockchainNode.Helpers do
   def last_block_height do
     case :blockchain_worker.blockchain() do
-      :undefined -> :undefined
+      :undefined ->
+        :undefined
+
       chain ->
         {:ok, height} = :blockchain.height(chain)
         height
@@ -10,35 +12,42 @@ defmodule BlockchainNode.Helpers do
 
   def last_block_time do
     case :blockchain_worker.blockchain() do
-      :undefined -> 0
+      :undefined ->
+        0
+
       chain ->
-        {:ok, genesis_block} = chain |> :blockchain.genesis_block
-        {:ok, head_block} = chain |> :blockchain.head_block
+        {:ok, genesis_block} = chain |> :blockchain.genesis_block()
+        {:ok, head_block} = chain |> :blockchain.head_block()
+
         case head_block == genesis_block do
-          true -> 0
+          true ->
+            0
+
           false ->
-            meta = head_block |> :blockchain_block.meta
+            meta = head_block |> :blockchain_block.meta()
             meta.block_time
         end
     end
   end
 
   def block_interval do
+    last_height = last_block_height()
+
     case :blockchain_worker.blockchain() do
-      :undefined -> 0
+      :undefined ->
+        0
 
       chain ->
-        times = chain
-                |> :blockchain.blocks()
-                |> Map.values()
-                |> Enum.map(fn block ->
-                  case :blockchain_block.is_genesis(block) do
-                    true -> 0
-                    false ->
-                      :blockchain_block.meta(block).block_time
-                  end
-                end)
-                |> Enum.sort()
+        times =
+          chain
+          |> :blockchain.blocks()
+          |> Map.values()
+          |> Enum.filter(fn block ->
+            !:blockchain_block.is_genesis(block) &&
+              :blockchain_block.height(block) >= last_height - 200
+          end)
+          |> Enum.map(fn block -> :blockchain_block.meta(block).block_time end)
+          |> Enum.sort()
 
         intervals =
           case length(times) do
