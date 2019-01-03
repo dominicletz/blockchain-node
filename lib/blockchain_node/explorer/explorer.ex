@@ -184,7 +184,7 @@ defmodule BlockchainNode.Explorer do
       type: "assert_location",
       gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
       owner: txn |> txn_mod.owner_address() |> addr_to_b58(),
-      location: txn |> txn_mod.location(),
+      location: txn |> txn_mod.location() |> Helpers.to_h3_string(),
       nonce: txn |> txn_mod.nonce(),
       fee: txn |> txn_mod.fee()
     }
@@ -224,7 +224,7 @@ defmodule BlockchainNode.Explorer do
             type: "gen_gateway",
             gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
             owner: txn |> txn_mod.owner_address() |> addr_to_b58(),
-            location: location
+            location: location |> Helpers.to_h3_string()
           }
       end
 
