@@ -4,7 +4,7 @@ defmodule BlockchainNode.Gateways do
   alias BlockchainNode.Helpers
 
   @me __MODULE__
-  @timeToLive 3
+  @timeToLive 10
   use GenServer
 
   def start_link() do
