@@ -135,7 +135,6 @@ defmodule BlockchainNode.Explorer do
   defp parse_txn(:blockchain_txn_payment_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "payment",
-      hash: txn |> txn_mod.hash() |> addr_to_b58(),
       payer: txn |> txn_mod.payer() |> addr_to_b58(),
       payee: txn |> txn_mod.payee() |> addr_to_b58(),
       amount: txn |> txn_mod.amount(),
