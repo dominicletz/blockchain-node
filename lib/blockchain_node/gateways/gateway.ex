@@ -9,6 +9,7 @@ defmodule BlockchainNode.Gateways.Gateway do
     :blocks_mined,
     :score,
     :last_poc_challenge,
-    :status
+    :status,
+    :boundary
   ]
 end

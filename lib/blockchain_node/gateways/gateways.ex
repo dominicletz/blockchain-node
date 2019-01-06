@@ -128,6 +128,12 @@ defmodule BlockchainNode.Gateways do
                     h3_to_geo(location)
                 end
 
+              boundary =
+                case location do
+                  :undefined -> nil
+                  _h3 -> for {blat, blng} <- :h3.to_geo_boundary(location), do: [blat, blng]
+                end
+
               %Gateway{
                 address: addr |> Helpers.bin_address_to_b58_string(),
                 owner: owner_address |> Helpers.bin_address_to_b58_string(),
@@ -138,7 +144,8 @@ defmodule BlockchainNode.Gateways do
                 score: if(score == :undefined, do: nil, else: score),
                 last_poc_challenge:
                   if(last_poc_challenge == :undefined, do: nil, else: last_poc_challenge),
-                status: if(location == :undefined, do: "inactive", else: "active")
+                status: if(location == :undefined, do: "inactive", else: "active"),
+                boundary: boundary
               }
             end
         end
