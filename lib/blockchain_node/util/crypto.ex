@@ -1,4 +1,4 @@
-defmodule BlockchainNode.Crypto do
+defmodule BlockchainNode.Util.Crypto do
   def encrypt(password, data) when is_binary(data) do
     k = password |> generate_key()
     iv = :crypto.strong_rand_bytes(12)

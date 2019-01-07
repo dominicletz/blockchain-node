@@ -14,7 +14,7 @@ defmodule BlockchainNode.Explorer.Router do
   plug(:dispatch)
 
   get "/accounts" do
-    send_resp(conn, 200, Poison.encode!(Explorer.list_accounts()))
+    send_resp(conn, 200, Poison.encode!(Explorer.Worker.list_accounts()))
   end
 
   get "/blocks" do
@@ -23,13 +23,13 @@ defmodule BlockchainNode.Explorer.Router do
         resp_body =
           before
           |> String.to_integer()
-          |> Explorer.list_blocks()
+          |> Explorer.Worker.list_blocks()
           |> Poison.encode!()
 
         send_resp(conn, 200, resp_body)
 
       _ ->
-        send_resp(conn, 200, Poison.encode!(Explorer.list_blocks()))
+        send_resp(conn, 200, Poison.encode!(Explorer.Worker.list_blocks()))
     end
   end
 
@@ -39,13 +39,13 @@ defmodule BlockchainNode.Explorer.Router do
         resp_body =
           before
           |> String.to_integer()
-          |> Explorer.list_transactions()
+          |> Explorer.Worker.list_transactions()
           |> Poison.encode!()
 
         send_resp(conn, 200, resp_body)
 
       _ ->
-        send_resp(conn, 200, Poison.encode!(Explorer.list_transactions()))
+        send_resp(conn, 200, Poison.encode!(Explorer.Worker.list_transactions()))
     end
   end
 

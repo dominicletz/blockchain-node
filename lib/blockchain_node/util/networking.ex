@@ -1,4 +1,4 @@
-defmodule BlockchainNode.Networking do
+defmodule BlockchainNode.Util.Networking do
   # the listen address for this node
   def listen_addr do
     :blockchain_swarm.swarm()
