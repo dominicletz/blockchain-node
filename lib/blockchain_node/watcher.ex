@@ -153,11 +153,7 @@ defmodule BlockchainNode.Watcher do
         interval: Helpers.block_interval()
       },
       accounts: Accounts.list(),
-      explorer: %{
-        accounts: Explorer.list_accounts(),
-        blocks: Explorer.list_blocks(),
-        transactions: Explorer.list_transactions()
-      }
+      gateways: Gateways.get_all()
     }
   end
 
