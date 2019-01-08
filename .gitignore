@@ -30,3 +30,6 @@ blockchain_node-*.tar
 *.block
 /latest/
 node_modules/
+
+# Ignore .ssh for Docker builds
+.ssh/

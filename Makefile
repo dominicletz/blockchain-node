@@ -27,3 +27,14 @@ deployable: release
 	@mkdir latest
 	@cd _build/prod/rel && tar -czf blockchain_node-$(NODE_OS).tgz blockchain_node
 	@mv _build/prod/rel/blockchain_node-$(NODE_OS).tgz latest/
+
+docker-build:
+	docker build -t blockchain-node .
+	docker create -p 4001:4001 --name=blockchain-node blockchain-node	
+
+docker-start:
+	docker start  blockchain-node
+
+docker-stop:
+	docker stop blockchain-node
+
