@@ -33,8 +33,13 @@ docker-build:
 	docker create -p 4001:4001 --name=blockchain-node blockchain-node	
 
 docker-start:
-	docker start  blockchain-node
+	docker start blockchain-node
 
 docker-stop:
 	docker stop blockchain-node
 
+docker-genesis-onboard:
+	docker exec -it blockchain-node sh -c "/_build/prod/rel/blockchain_node/bin/blockchain_node genesis onboard"
+
+docker-shell:
+	docker exec -it blockchain-node bash
