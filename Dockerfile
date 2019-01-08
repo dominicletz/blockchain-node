@@ -17,8 +17,6 @@ RUN rm -Rf _build \
     && mix deps.get \
     && make release
 
-RUN ./cmd genesis onboard
-
 EXPOSE 4001
 ENV REPLACE_OS_VARS=true PORT=4001
 
@@ -26,4 +24,4 @@ ENV REPLACE_OS_VARS=true PORT=4001
 
 #USER default
 ENTRYPOINT ["_build/prod/rel/blockchain_node/bin/blockchain_node"]
-CMD ["foreground", ";", "genesis onboard"]
+CMD ["foreground"]
