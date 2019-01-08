@@ -19,4 +19,4 @@ while getopts e: o; do
 done
 shift "$((OPTIND - 1))"
 
-docker exec -it blockchain-node sh /cmd $@
+docker exec -it blockchain-node sh /bin/blockchain_node $@

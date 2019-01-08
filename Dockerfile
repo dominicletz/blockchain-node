@@ -19,12 +19,23 @@ RUN rm -Rf _build \
     && mix deps.get \
     && make release
 
-# RUN ./cmd start
-# RUN ./cmd genesis onboard
-# RUN ./cmd stop
+#Extract Release archive to /rel for copying in next stage
+RUN APP_NAME="blockchain_node"  \
+    && RELEASE_DIR=`ls -d _build/prod/rel/$APP_NAME/releases/*/` \
+    && mkdir /export \
+    && tar -xf "$RELEASE_DIR/$APP_NAME.tar.gz" -C /export
+
+
+#================
+#Deployment Stage
+#================
+FROM elixir:latest
+
+COPY --from=build /export/ .
+COPY --from=build /cmd .
 
 EXPOSE 4001
 ENV REPLACE_OS_VARS=true PORT=4001
 
-ENTRYPOINT ["_build/prod/rel/blockchain_node/bin/blockchain_node"]
+ENTRYPOINT ["/bin/blockchain_node"]
 CMD ["foreground"]
