@@ -4,26 +4,51 @@ defmodule BlockchainNode.Watcher.Worker do
   @me __MODULE__
   require Logger
 
-  alias BlockchainNode.{Util.Helpers, Watcher, Explorer, Transaction}
+  alias BlockchainNode.Watcher
 
   #==================================================================
   # API
   #==================================================================
-  def start_link() do
-    GenServer.start_link(@me, %Watcher{}, name: @me)
+  def start_link(args) do
+    GenServer.start_link(@me, args, name: @me)
   end
 
   def chain() do
     GenServer.call(@me, :chain, :infinity)
   end
 
+  def height() do
+    GenServer.call(@me, :height, :infinity)
+  end
+
+  def last_block_time() do
+    GenServer.call(@me, :last_block_time, :infinity)
+  end
+
+  def block_interval() do
+    GenServer.call(@me, :block_interval, :infinity)
+  end
+
   #==================================================================
   # GenServer Callbacks
   #==================================================================
   @impl true
-  def init(state) do
+  def init(args) do
+    case Keyword.get(args, :load_genesis, false) do
+      true ->
+        genesis_file = Path.join(:code.priv_dir(:blockchain_node), "genesis")
+        case File.read(genesis_file) do
+          {:ok, genesis_block} ->
+            ok = :blockchain_worker.integrate_genesis_block(:blockchain_block.deserialize(genesis_block))
+          {:error, reason} ->
+            {:error, reason}
+        end
+      false ->
+        {:ok, :no_genesis}
+    end
+
     :ok = :blockchain_event.add_handler(self())
-    {:ok, state}
+    {:ok, %Watcher{}}
   end
 
   @impl true
@@ -32,100 +57,69 @@ defmodule BlockchainNode.Watcher.Worker do
   end
 
   @impl true
+  def handle_call(:height, _from, state = %Watcher{chain: nil}) do
+    {:reply, 0, state}
+  end
+  def handle_call(:height, _from, state = %Watcher{chain: chain}) do
+    {:ok, height} = :blockchain.height(chain)
+    {:reply, height, state}
+  end
+
+  @impl true
+  def handle_call(:last_block_time, _from, state = %Watcher{chain: nil}) do
+    {:reply, 0, state}
+  end
+  def handle_call(:last_block_time, _from, state = %Watcher{chain: chain}) do
+    {:ok, head_block} = :blockchain.head_block(chain)
+    time = :blockchain_block.meta(head_block).block_time
+    {:reply, time, state}
+  end
+
+  @impl true
+  def handle_call(:block_interval, _from, state = %Watcher{chain: nil}) do
+    {:reply, 0, state}
+  end
+  def handle_call(:block_interval, _from, state = %Watcher{chain: chain}) do
+    intervals = chain |> calculate_times() |> calculate_intervals()
+    res = Enum.sum(intervals) / length(intervals)
+    {:reply, res, state}
+  end
+
+  @impl true
   def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, _genesis_hash}}}, _state) do
     chain = :blockchain_worker.blockchain()
-    update_explorer(chain)
     new_state = %Watcher{chain: chain}
     {:noreply, new_state}
   end
 
-  @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %Watcher{chain: chain}) do
-    # NOTE: Check if this is indeed a new hash
-    case :blockchain.head_hash(chain) do
-      {:ok, head_hash} ->
-        case hash == head_hash do
-          true -> update_explorer(chain)
-          false -> Logger.warn("Already at the latest head_hash")
-        end
-      {:error, _reason}=e ->
-        Logger.error("Could not get head_hash: #{e}")
-    end
-
+  def handle_info(_, state) do
     {:noreply, state}
   end
 
   #==================================================================
   # Private Functions
   #==================================================================
+  defp calculate_times(chain) do
+    {:ok, last_height} = :blockchain.height(chain)
 
-  defp update_explorer(chain) do
-    blocks = chain |> update_blocks()
-    {:ok, height} = chain |> :blockchain.height()
-    transactions = chain |> update_transactions()
-    last_block_time = chain |> update_last_block_time()
-    accounts = chain |> update_accounts()
-    Explorer.Worker.update(blocks, height, transactions, last_block_time, accounts)
+    chain
+    |> :blockchain.blocks()
+    |> Map.values()
+    |> Enum.filter(fn block ->
+      !:blockchain_block.is_genesis(block) &&
+        :blockchain_block.height(block) >= last_height - 200
+    end)
+    |> Enum.map(fn block -> :blockchain_block.meta(block).block_time end)
+    |> Enum.sort()
   end
 
-  defp update_blocks(chain) do
-    for {hash0, block0} <- :blockchain.blocks(chain) do
-      hash = hash0 |> Base.encode16(case: :lower)
-      height = :blockchain_block.height(block0)
-      time =  :blockchain_block.meta(block0).block_time
-      round = :blockchain_block.meta(block0).hbbft_round
-      transactions =  :blockchain_block.transactions(block0)
-                      |> Enum.map(fn txn -> Transaction.Parser.parse(hash0, block0, txn, chain) end)
-
-      %{
-        hash: hash,
-        height: height,
-        time: time,
-        round: round,
-        transactions: transactions
-      }
-    end
-    |> Enum.reduce(%{}, fn block, acc -> Map.put(acc, block.height, block) end)
-  end
-
-  defp update_transactions(chain) do
-    for {hash, block} <- :blockchain.blocks(chain) do
-      for txn <- :blockchain_block.transactions(block) do
-        Transaction.Parser.parse(hash, block, txn, chain)
-      end
-    end
-    |> List.flatten()
-    |> Enum.sort_by(fn txn -> [txn.height, txn.block_hash] end)
-    |> Enum.with_index()
-    |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
-    |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
-  end
-
-  defp update_last_block_time(chain) do
-    {:ok, head_block} = :blockchain.head_block(chain)
-    :blockchain_block.meta(head_block).block_time
-  end
-
-  defp update_accounts(chain) do
-    case :blockchain.ledger(chain) do
-      :undefined ->
-        []
-      ledger ->
-        all_transactions = Explorer.Worker.list_transactions()
-        for {addr, {:entry, nonce, balance}} <- :blockchain_ledger_v1.entries(ledger) do
-          address = addr |> Helpers.addr_to_b58()
-          %{
-            address: address,
-            balance: balance,
-            nonce: nonce,
-            transactions:
-            all_transactions
-            |> Enum.filter(fn txn ->
-              txn[:payer] == address or txn[:payee] == address or txn[:address] == address
-            end)
-          }
-      end
+  defp calculate_intervals(times) do
+    case length(times) do
+      0 -> [0]
+      1 -> [0]
+      _ ->
+        Range.new(0, length(times) - 2)
+        |> Enum.map(fn i -> Enum.at(times, i + 1) - Enum.at(times, i) end)
     end
   end
-
 end

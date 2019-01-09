@@ -3,27 +3,27 @@ defmodule BlockchainNode.Watcher.Supervisor do
 
   @me __MODULE__
 
-  alias BlockchainNode.{Watcher, Explorer, Gateway, Account, Transaction}
+  alias BlockchainNode.Watcher
+  alias BlockchainNode.API.Explorer
 
   #==================================================================
   # API
   #==================================================================
-  def start_link(arg) do
-    Supervisor.start_link(@me, arg, name: @me)
+  def start_link(args) do
+    Supervisor.start_link(@me, args, name: @me)
   end
 
   #==================================================================
   # Supervisor Callbacks
   #==================================================================
   @impl true
-  def init(_arg) do
-
+  def init(args) do
     children = [
       %{
         id: :"BlockchainNode.Watcher.Worker",
         start: {Watcher.Worker,
           :start_link,
-          []},
+          [args]},
         restart: :transient,
         type: :worker
       },
@@ -34,31 +34,31 @@ defmodule BlockchainNode.Watcher.Supervisor do
           []},
         restart: :transient,
         type: :worker
-      },
-      %{
-        id: :"BlockchainNode.Gateway.Worker",
-        start: {Gateway.Worker,
-          :start_link,
-          []},
-        restart: :transient,
-        type: :worker
-      },
-      %{
-        id: :"BlockchainNode.Account.Worker",
-        start: {Account.Worker,
-          :start_link,
-          []},
-        restart: :transient,
-        type: :worker
-      },
-      %{
-        id: :"BlockchainNode.Transaction.Worker",
-        start: {Transaction.Worker,
-          :start_link,
-          []},
-        restart: :transient,
-        type: :worker
       }
+      # %{
+      #   id: :"BlockchainNode.Gateway.Worker",
+      #   start: {Gateway.Worker,
+      #     :start_link,
+      #     []},
+      #   restart: :transient,
+      #   type: :worker
+      # },
+      # %{
+      #   id: :"BlockchainNode.Account.Worker",
+      #   start: {Account.Worker,
+      #     :start_link,
+      #     []},
+      #   restart: :transient,
+      #   type: :worker
+      # },
+      # %{
+      #   id: :"BlockchainNode.Transaction.Worker",
+      #   start: {Transaction.Worker,
+      #     :start_link,
+      #     []},
+      #   restart: :transient,
+      #   type: :worker
+      # }
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

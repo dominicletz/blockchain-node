@@ -1,7 +1,7 @@
-defmodule BlockchainNode.Accounts.Router do
+defmodule BlockchainNode.API.Accounts.Router do
   use Plug.Router
-  alias BlockchainNode.Accounts
-  alias BlockchainNode.Accounts.AccountTransactions
+  alias BlockchainNode.API.Accounts
+  alias BlockchainNode.API.Accounts.AccountTransactions
 
   plug(:match)
 

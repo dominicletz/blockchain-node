@@ -1,6 +1,6 @@
-defmodule BlockchainNode.Explorer.Router do
+defmodule BlockchainNode.API.Explorer.Router do
   use Plug.Router
-  alias BlockchainNode.Explorer
+  alias BlockchainNode.API.Explorer
 
   plug(CORSPlug)
   plug(:match)

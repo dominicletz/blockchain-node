@@ -1,6 +1,6 @@
-defmodule BlockchainNode.Gateways.Router do
+defmodule BlockchainNode.API.Gateways.Router do
   use Plug.Router
-  alias BlockchainNode.Gateways
+  alias BlockchainNode.API.Gateways
   alias BlockchainNode.Util.Networking
 
   plug(:match)

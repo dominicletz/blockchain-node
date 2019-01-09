@@ -1,22 +1,22 @@
 defmodule BlockchainNode.Router do
   use Plug.Router
 
-  alias BlockchainNode.Accounts
-  alias BlockchainNode.Gateways
-  alias BlockchainNode.Explorer
-  alias BlockchainNode.Helpers
+  alias BlockchainNode.API.Accounts
+  alias BlockchainNode.API.Gateways
+  alias BlockchainNode.API.Explorer
+  alias BlockchainNode.Watcher
 
   plug(CORSPlug)
   plug(:match)
   plug(:dispatch)
 
-  forward("/accounts", to: Accounts.Router)
-  forward("/gateways", to: Gateways.Router)
+  # forward("/accounts", to: Accounts.Router)
+  # forward("/gateways", to: Gateways.Router)
   forward("/explorer", to: Explorer.Router)
 
   get "/" do
-    height = Explorer.Worker.height
-    time = Explorer.Worker.last_block_time
+    height = Watcher.Worker.height
+    time = Watcher.Worker.last_block_time
 
     send_resp(
       conn,
@@ -25,7 +25,7 @@ defmodule BlockchainNode.Router do
         nodeHeight: height,
         chainHeight: height,
         time: time,
-        interval: Helpers.block_interval()
+        interval: Watcher.Worker.block_interval()
       })
     )
   end

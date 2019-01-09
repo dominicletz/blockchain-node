@@ -37,11 +37,10 @@ defmodule BlockchainNode.Supervisor do
       {:base_dir, base_dir}
     ]
 
-    watcher_sup_opts = []
+    load_genesis = Application.get_env(:blockchain_node, :load_genesis, false)
+    watcher_sup_opts = [{:load_genesis, load_genesis}]
 
-    # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: BlockchainNode.Worker.start_link(arg)
       %{
         id: :blockchain_sup,
         start: {:blockchain_sup, :start_link, [blockchain_sup_opts]},
