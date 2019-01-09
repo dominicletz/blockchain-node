@@ -8,6 +8,7 @@ services:
       - "4001:4001"
     volumes:
       - node1-data:/root/.helium
+      - node1-data:/data
 
   node2:
     image: blockchain-node
@@ -15,6 +16,7 @@ services:
       - "4002:4001"
     volumes:
       - node2-data:/root/.helium
+      - node2-data:/data
 
   node3:
     image: blockchain-node
@@ -22,6 +24,7 @@ services:
       - "4003:4001"
     volumes:
       - node3-data:/root/.helium
+      - node3-data:/data
 
   node4:
     image: blockchain-node
@@ -29,6 +32,7 @@ services:
       - "4004:4001"
     volumes:
       - node4-data:/root/.helium
+      - node4-data:/data
 
   node5:
     image: blockchain-node
@@ -36,6 +40,7 @@ services:
       - "4005:4001"
     volumes:
       - node5-data:/root/.helium
+      - node5-data:/data
 
   node6:
     image: blockchain-node
@@ -43,6 +48,7 @@ services:
       - "4006:4001"
     volumes:
       - node6-data:/root/.helium
+      - node6-data:/data
 
   node7:
     image: blockchain-node
@@ -50,6 +56,7 @@ services:
       - "4007:4001"
     volumes:
       - node7-data:/root/.helium
+      - node7-data:/data
 
   node8:
     image: blockchain-node
@@ -57,6 +64,7 @@ services:
       - "4008:4001"
     volumes:
       - node8-data:/root/.helium
+      - node8-data:/data
 
   node9:
     image: blockchain-node
@@ -64,6 +72,7 @@ services:
       - "4009:4001"
     volumes:
       - node9-data:/root/.helium
+      - node9-data:/data
 
   node10:
     image: blockchain-node
@@ -71,6 +80,7 @@ services:
       - "4010:4001"
     volumes:
       - node10-data:/root/.helium
+      - node10-data:/data
 
 
 volumes:

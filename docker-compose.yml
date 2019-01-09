@@ -7,6 +7,7 @@ services:
       - "4001:4001"
     volumes:
       - node-data:/root/.helium
+      - node-data:/data
 
 volumes:
   node-data:
