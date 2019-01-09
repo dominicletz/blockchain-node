@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  blockchain-node:
+    image: blockchain-node
+    ports:
+      - "4001:4001"
+    volumes:
+      - node-data:/root/.helium
+
+volumes:
+  node-data:

@@ -1,0 +1,88 @@
+version: '3'
+
+services:
+  node1:
+    image: blockchain-node
+    build: .
+    ports:
+      - "4001:4001"
+    volumes:
+      - node1-data:/root/.helium
+
+  node2:
+    image: blockchain-node
+    ports:
+      - "4002:4001"
+    volumes:
+      - node2-data:/root/.helium
+
+  node3:
+    image: blockchain-node
+    ports:
+      - "4003:4001"
+    volumes:
+      - node3-data:/root/.helium
+
+  node4:
+    image: blockchain-node
+    ports:
+      - "4004:4001"
+    volumes:
+      - node4-data:/root/.helium
+
+  node5:
+    image: blockchain-node
+    ports:
+      - "4005:4001"
+    volumes:
+      - node5-data:/root/.helium
+
+  node6:
+    image: blockchain-node
+    ports:
+      - "4006:4001"
+    volumes:
+      - node6-data:/root/.helium
+
+  node7:
+    image: blockchain-node
+    ports:
+      - "4007:4001"
+    volumes:
+      - node7-data:/root/.helium
+
+  node8:
+    image: blockchain-node
+    ports:
+      - "4008:4001"
+    volumes:
+      - node8-data:/root/.helium
+
+  node9:
+    image: blockchain-node
+    ports:
+      - "4009:4001"
+    volumes:
+      - node9-data:/root/.helium
+
+  node10:
+    image: blockchain-node
+    ports:
+      - "4010:4001"
+    volumes:
+      - node10-data:/root/.helium
+
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
+  node4-data:
+  node5-data:
+  node6-data:
+  node7-data:
+  node8-data:
+  node9-data:
+  node10-data:
+
+
