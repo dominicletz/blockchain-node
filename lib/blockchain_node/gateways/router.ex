@@ -104,6 +104,8 @@ defmodule BlockchainNode.Gateways.Router do
           200,
           Poison.encode!(%{
             type: "assertLocationSubmitted",
+            gatewayAddress: params["gateway_address"],
+            ownerAddress: address,
             time: current_time
           })
         )
