@@ -156,3 +156,14 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/blockchain_node](https://hexdocs.pm/blockchain_node).
 
+## Using Docker
+
+You can build and run the node in a docker container using the following instructions. *IMPORTANT*: you will need to copy a private ssh key that has access to helium's private github repos to `.ssh/id_rsa`.  The `.ssh/` directory is in `.gitignore` so the key will remain local to each user.
+
+To Build the container, use: `make docker-build`.
+
+To start the container, use: `make docker-start`. Note that this command will fail if you haven't built the container first.  This command will use the existing container each time it is run.  If the repository is updated, you must re-run `make docker-build` first.
+
+To stop the container, use; `make docker-stop`.
+
+
