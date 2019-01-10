@@ -1,4 +1,6 @@
 defmodule BlockchainNode.CLI do
+  alias BlockchainNode.API.Account
+
   def to_chars(list) do
     list
     |> List.flatten()
@@ -12,11 +14,11 @@ defmodule BlockchainNode.CLI do
   end
 
   def create_account() do
-    BlockchainNode.Accounts.create(nil)
+    Account.Worker.create(nil)
   end
 
   def create_secure_account(password) do
-    BlockchainNode.Accounts.create(password)
+    Account.Worker.create(password)
   end
 
   def load_genesis(genesis_file) do
@@ -45,6 +47,6 @@ defmodule BlockchainNode.CLI do
   end
 
   def list_accounts() do
-    BlockchainNode.Accounts.list()
+    Account.Worker.list()
   end
 end

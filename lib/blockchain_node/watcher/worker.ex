@@ -5,6 +5,7 @@ defmodule BlockchainNode.Watcher.Worker do
   require Logger
 
   alias BlockchainNode.Watcher
+  alias BlockchainNode.API.Account
 
   #==================================================================
   # API
@@ -28,7 +29,6 @@ defmodule BlockchainNode.Watcher.Worker do
   def block_interval() do
     GenServer.call(@me, :block_interval, :infinity)
   end
-
   #==================================================================
   # GenServer Callbacks
   #==================================================================
@@ -39,7 +39,9 @@ defmodule BlockchainNode.Watcher.Worker do
         genesis_file = Path.join(:code.priv_dir(:blockchain_node), "genesis")
         case File.read(genesis_file) do
           {:ok, genesis_block} ->
-            ok = :blockchain_worker.integrate_genesis_block(:blockchain_block.deserialize(genesis_block))
+            :ok = genesis_block
+                  |> :blockchain_block.deserialize()
+                  |> :blockchain_worker.integrate_genesis_block()
           {:error, reason} ->
             {:error, reason}
         end
@@ -92,6 +94,14 @@ defmodule BlockchainNode.Watcher.Worker do
     {:noreply, new_state}
   end
 
+  @impl true
+  def handle_info({:blockchain_event, {:add_block, _hash, _flag}}, state) do
+    # NOTE: send updates to other workers as needed here
+    :ok = Account.Worker.update_transaction_fee()
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(_, state) do
     {:noreply, state}
   end
