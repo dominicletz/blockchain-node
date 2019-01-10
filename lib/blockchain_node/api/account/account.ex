@@ -1,4 +1,4 @@
-defmodule BlockchainNode.Accounts.Account do
+defmodule BlockchainNode.API.Account do
   @derive [Poison.Encoder]
   defstruct [
     :address,

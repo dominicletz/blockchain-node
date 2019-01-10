@@ -4,7 +4,7 @@ defmodule BlockchainNode.Watcher.Supervisor do
   @me __MODULE__
 
   alias BlockchainNode.Watcher
-  alias BlockchainNode.API.Explorer
+  alias BlockchainNode.API.{Explorer, Account}
 
   #==================================================================
   # API
@@ -28,13 +28,13 @@ defmodule BlockchainNode.Watcher.Supervisor do
         type: :worker
       },
       %{
-        id: :"BlockchainNode.Explorer.Worker",
+        id: :"BlockchainNode.API.Explorer.Worker",
         start: {Explorer.Worker,
           :start_link,
           []},
         restart: :transient,
         type: :worker
-      }
+      },
       # %{
       #   id: :"BlockchainNode.Gateway.Worker",
       #   start: {Gateway.Worker,
@@ -43,14 +43,14 @@ defmodule BlockchainNode.Watcher.Supervisor do
       #   restart: :transient,
       #   type: :worker
       # },
-      # %{
-      #   id: :"BlockchainNode.Account.Worker",
-      #   start: {Account.Worker,
-      #     :start_link,
-      #     []},
-      #   restart: :transient,
-      #   type: :worker
-      # },
+      %{
+        id: :"BlockchainNode.API.Account.Worker",
+        start: {Account.Worker,
+          :start_link,
+          []},
+        restart: :transient,
+        type: :worker
+      }
       # %{
       #   id: :"BlockchainNode.Transaction.Worker",
       #   start: {Transaction.Worker,
