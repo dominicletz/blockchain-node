@@ -1,6 +1,6 @@
-defmodule BlockchainNode.API.Gateways.Router do
+defmodule BlockchainNode.API.Gateway.Router do
   use Plug.Router
-  alias BlockchainNode.API.Gateways
+  alias BlockchainNode.API.Gateway
   alias BlockchainNode.Util.Networking
 
   plug(:match)
@@ -19,10 +19,10 @@ defmodule BlockchainNode.API.Gateways.Router do
         page = String.to_integer(page)
         per_page = String.to_integer(per_page)
 
-        send_resp(conn, 200, Poison.encode!(Gateways.get_paginated(page, per_page)))
+        send_resp(conn, 200, Poison.encode!(Gateway.Worker.get_paginated(page, per_page)))
 
       _ ->
-        send_resp(conn, 200, Poison.encode!(Gateways.get_all()))
+        send_resp(conn, 200, Poison.encode!(Gateway.Worker.get_all()))
     end
   end
 
@@ -40,7 +40,7 @@ defmodule BlockchainNode.API.Gateways.Router do
       conn,
       200,
       Poison.encode!(%{
-        token: Gateways.registration_token(address, password),
+        token: Gateway.Worker.registration_token(address, password),
         owner: address,
         addr: Networking.swarm_addr()
       })
@@ -57,7 +57,7 @@ defmodule BlockchainNode.API.Gateways.Router do
         params["password"]
       end
 
-    case Gateways.confirm_registration(address, password, params["token"]) do
+    case Gateway.Worker.confirm_registration(address, password, params["token"]) do
       {:error, "incorrectPasswordProvided"} ->
         send_resp(conn, 401, "")
 
@@ -78,7 +78,7 @@ defmodule BlockchainNode.API.Gateways.Router do
 
   post "/:address/confirm_registration/decline" do
     params = conn.body_params
-    Gateways.delete_token(params["token"])
+    Gateway.Worker.delete_token(params["token"])
     send_resp(conn, 200, "")
   end
 
@@ -92,7 +92,7 @@ defmodule BlockchainNode.API.Gateways.Router do
         params["password"]
       end
 
-    case Gateways.confirm_assert_location(address, params["gateway_address"], password, params["token"]) do
+    case Gateway.Worker.confirm_assert_location(address, params["gateway_address"], password, params["token"]) do
       {:error, "incorrectPasswordProvided"} ->
         send_resp(conn, 401, "")
 
@@ -114,7 +114,7 @@ defmodule BlockchainNode.API.Gateways.Router do
 
   post "/:address/assert_location/decline" do
     params = conn.body_params
-    Gateways.delete_token(params["token"])
+    Gateway.Worker.delete_token(params["token"])
     send_resp(conn, 200, "")
   end
 
@@ -134,7 +134,7 @@ defmodule BlockchainNode.API.Gateways.Router do
       {ne_lat |> String.to_float(), ne_lng |> String.to_float()}
     }
 
-    coverage = Gateways.get_coverage(resolution, bounds)
+    coverage = Gateway.Worker.get_coverage(resolution, bounds)
     send_resp(conn, 200, Poison.encode!(coverage))
   end
 

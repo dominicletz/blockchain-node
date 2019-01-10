@@ -1,4 +1,4 @@
-defmodule BlockchainNode.Gateways.Gateway do
+defmodule BlockchainNode.API.Gateway do
   @derive [Poison.Encoder]
   defstruct [
     :address,
