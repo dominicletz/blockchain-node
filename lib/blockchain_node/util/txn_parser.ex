@@ -1,4 +1,4 @@
-defmodule BlockchainNode.API.Transaction.Parser do
+defmodule BlockchainNode.Util.TxnParser do
   alias BlockchainNode.Util.Helpers
 
   #==================================================================

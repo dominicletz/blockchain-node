@@ -34,23 +34,28 @@ defmodule BlockchainNode.Watcher.Worker do
   #==================================================================
   @impl true
   def init(args) do
-    case Keyword.get(args, :load_genesis, false) do
-      true ->
-        genesis_file = Path.join(:code.priv_dir(:blockchain_node), "genesis")
-        case File.read(genesis_file) do
-          {:ok, genesis_block} ->
-            :ok = genesis_block
-                  |> :blockchain_block.deserialize()
-                  |> :blockchain_worker.integrate_genesis_block()
-          {:error, reason} ->
-            {:error, reason}
-        end
-      false ->
-        {:ok, :no_genesis}
-    end
+    watcher =
+      case Keyword.get(args, :load_genesis, false) do
+        true ->
+          genesis_file = Path.join(:code.priv_dir(:blockchain_node), "genesis")
+          case File.read(genesis_file) do
+            {:ok, genesis_block} ->
+              :ok = genesis_block
+                    |> :blockchain_block.deserialize()
+                    |> :blockchain_worker.integrate_genesis_block()
+              chain = :blockchain_worker.blockchain()
+              %Watcher{chain: chain}
+            {:error, reason} ->
+              Logger.error("Error, reason: #{reason}")
+              %Watcher{}
+          end
+        false ->
+          Logger.warn("No genesis")
+          %Watcher{}
+      end
 
     :ok = :blockchain_event.add_handler(self())
-    {:ok, %Watcher{}}
+    {:ok, watcher}
   end
 
   @impl true
@@ -89,6 +94,7 @@ defmodule BlockchainNode.Watcher.Worker do
 
   @impl true
   def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, _genesis_hash}}}, _state) do
+    Logger.info("Got integrate_genesis_block event")
     chain = :blockchain_worker.blockchain()
     new_state = %Watcher{chain: chain}
     {:noreply, new_state}
@@ -97,6 +103,7 @@ defmodule BlockchainNode.Watcher.Worker do
   @impl true
   def handle_info({:blockchain_event, {:add_block, _hash, _flag}}, state) do
     # NOTE: send updates to other workers as needed here
+    Logger.info("Got add_block event")
     :ok = Account.Worker.update_transaction_fee()
     {:noreply, state}
   end

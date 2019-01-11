@@ -5,8 +5,7 @@ defmodule BlockchainNode.API.Explorer.Worker do
   @range 100
 
   alias BlockchainNode.Watcher
-  alias BlockchainNode.Util.Helpers
-  alias BlockchainNode.API.Transaction
+  alias BlockchainNode.Util.{Helpers, TxnParser}
 
   #==================================================================
   # API
@@ -136,7 +135,7 @@ defmodule BlockchainNode.API.Explorer.Worker do
       time =  :blockchain_block.meta(block0).block_time
       round = :blockchain_block.meta(block0).hbbft_round
       transactions =  :blockchain_block.transactions(block0)
-                      |> Enum.map(fn txn -> Transaction.Parser.parse(hash0, block0, txn, chain) end)
+                      |> Enum.map(fn txn -> TxnParser.parse(hash0, block0, txn, chain) end)
       %{
         hash: hash,
         height: height,
@@ -151,7 +150,7 @@ defmodule BlockchainNode.API.Explorer.Worker do
   defp get_transactions(chain) do
     for {hash, block} <- :blockchain.blocks(chain) do
       for txn <- :blockchain_block.transactions(block) do
-        Transaction.Parser.parse(hash, block, txn, chain)
+        TxnParser.parse(hash, block, txn, chain)
       end
     end
     |> List.flatten()
