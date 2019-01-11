@@ -61,6 +61,11 @@ defmodule BlockchainNode.API.Account.Worker do
     GenServer.call(@me, {:has_association, address}, :infinity)
   end
 
+  # XXX: This makes private key visible, but we need it for signing transactions
+  def keys(address, password) do
+    GenServer.call(@me, {:keys, address, password}, :infinity)
+  end
+
   def update_transaction_fee() do
     GenServer.cast(@me, :update_transaction_fee)
   end
@@ -206,8 +211,27 @@ defmodule BlockchainNode.API.Account.Worker do
       case Map.get(state, address) do
         nil ->
           {:error, :no_account}
-        account ->
-          account.has_association
+        account -> account.has_association
+      end
+    {:reply, res, state}
+  end
+
+  @impl true
+  def handle_call({:public_key, address}, _from, state) do
+    res =
+      case Map.get(state, address) do
+        nil -> {:error, :no_account}
+        account -> account.public_key
+      end
+    {:reply, res, state}
+  end
+
+  @impl true
+  def handle_call({:keys, address, password}, _from, state) do
+    res =
+      case Map.get(state, address) do
+        nil -> {:error, :no_account}
+        _account -> load_keys(address, password)
       end
     {:reply, res, state}
   end
@@ -222,6 +246,7 @@ defmodule BlockchainNode.API.Account.Worker do
       end)
     {:noreply, new_state}
   end
+
 
   #==================================================================
   # Private Functions

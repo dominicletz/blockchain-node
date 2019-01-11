@@ -40,7 +40,7 @@ defmodule BlockchainNode.API.Gateway.Router do
       conn,
       200,
       Poison.encode!(%{
-        token: Gateway.Worker.registration_token(address, password),
+        token: Gateway.Worker.register_token(address, password),
         owner: address,
         addr: Networking.swarm_addr()
       })
@@ -92,7 +92,7 @@ defmodule BlockchainNode.API.Gateway.Router do
         params["password"]
       end
 
-    case Gateway.Worker.confirm_assert_location(address, params["gateway_address"], password, params["token"]) do
+    case Gateway.Worker.confirm_assert_location(address, password, params["token"]) do
       {:error, "incorrectPasswordProvided"} ->
         send_resp(conn, 401, "")
 
