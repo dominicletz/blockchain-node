@@ -1,9 +1,7 @@
 defmodule BlockchainNode.Router do
   use Plug.Router
 
-  alias BlockchainNode.API.Account
-  # alias BlockchainNode.API.Gateways
-  alias BlockchainNode.API.Explorer
+  alias BlockchainNode.API.{Account, Gateway, Explorer}
   alias BlockchainNode.Watcher
 
   plug(CORSPlug)
@@ -11,7 +9,7 @@ defmodule BlockchainNode.Router do
   plug(:dispatch)
 
   forward("/accounts", to: Account.Router)
-  # forward("/gateways", to: Gateways.Router)
+  forward("/gateways", to: Gateway.Router)
   forward("/explorer", to: Explorer.Router)
 
   get "/" do

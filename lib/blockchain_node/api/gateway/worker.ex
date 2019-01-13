@@ -56,7 +56,15 @@ defmodule BlockchainNode.API.Gateway.Worker do
 
   @impl true
   def handle_call(:get_all, _from, state) do
-    {:reply, get_gateways(), state}
+    gateways = get_gateways()
+    res =
+      %{
+        entries: gateways,
+        total: Enum.count(gateways),
+        page: 0,
+        per_page: Enum.count(gateways)
+      }
+    {:reply, res, state}
   end
 
   @impl true
@@ -198,7 +206,8 @@ defmodule BlockchainNode.API.Gateway.Worker do
                 :undefined ->
                   {{nil, nil}, nil, nil, "inactive"}
                 h3 ->
-                  {:h3.to_geo(h3), :h3.to_geo_boundary(h3), to_string(h3), "active"}
+                  bounds = for {blat, blng} <- :h3.to_geo_boundary(h3), do: [blat, blng]
+                  {:h3.to_geo(h3), bounds, to_string(h3), "active"}
               end
 
             poc_challenge =

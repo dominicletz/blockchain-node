@@ -11,6 +11,7 @@
   "distillery": {:hex, :distillery, "2.0.12", "6e78fe042df82610ac3fa50bd7d2d8190ad287d120d3cd1682d83a44e8b34dfb", [:mix], [{:artificery, "~> 0.2", [hex: :artificery, repo: "hexpm", optional: false]}], "hexpm"},
   "ecc_compact": {:hex, :ecc_compact, "1.0.4", "b2dda47a6810b59a24331f3c864001a2fde1c85a7bc31e52e7b6b2ee532f5627", [:rebar3], [], "hexpm"},
   "erl_base58": {:hex, :erl_base58, "0.0.1", "37710854461d71df338e73c65776302db41c4bab4674d2ec134ed7bcfc7b5552", [:rebar3], [], "hexpm"},
+  "fsm": {:hex, :fsm, "0.3.1", "087aa9b02779a84320dc7a2d8464452b5308e29877921b2bde81cdba32a12390", [:mix], [], "hexpm"},
   "getopt": {:hex, :getopt, "1.0.1", "c73a9fa687b217f2ff79f68a3b637711bb1936e712b521d8ce466b29cbf7808a", [:rebar3], [], "hexpm"},
   "goldrush": {:hex, :goldrush, "0.1.9", "f06e5d5f1277da5c413e84d5a2924174182fb108dabb39d5ec548b27424cd106", [:rebar3], [], "hexpm"},
   "gpb": {:hex, :gpb, "4.2.1", "3ae57fdfa1b78c155ea27d86886eb248002180c447d8b450d276a908da272509", [:make, :rebar], [], "hexpm"},

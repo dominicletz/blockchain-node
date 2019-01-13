@@ -5,7 +5,7 @@ defmodule BlockchainNode.Watcher.Worker do
   require Logger
 
   alias BlockchainNode.Watcher
-  alias BlockchainNode.API.Account
+  alias BlockchainNode.API.{Account, Transaction}
 
   #==================================================================
   # API
@@ -93,18 +93,22 @@ defmodule BlockchainNode.Watcher.Worker do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, _genesis_hash}}}, _state) do
+  def handle_info({:blockchain_event, {:integrate_genesis_block, {:ok, genesis_hash}}}, _state) do
     Logger.info("Got integrate_genesis_block event")
     chain = :blockchain_worker.blockchain()
-    new_state = %Watcher{chain: chain}
-    {:noreply, new_state}
+    {:ok, genesis_block} = :blockchain.get_block(genesis_hash, chain)
+    :ok = Transaction.Worker.update_genesis_transactions(genesis_block)
+    :ok = Account.Worker.update()
+    {:noreply, %Watcher{chain: chain}}
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, _hash, _flag}}, state) do
+  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %Watcher{chain: chain}) do
     # NOTE: send updates to other workers as needed here
     Logger.info("Got add_block event")
-    :ok = Account.Worker.update_transaction_fee()
+    {:ok, block} = :blockchain.get_block(hash, chain)
+    :ok = Transaction.Worker.update_block_transactions(block)
+    :ok = Account.Worker.update()
     {:noreply, state}
   end
 

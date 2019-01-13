@@ -135,7 +135,7 @@ defmodule BlockchainNode.API.Explorer.Worker do
       time =  :blockchain_block.meta(block0).block_time
       round = :blockchain_block.meta(block0).hbbft_round
       transactions =  :blockchain_block.transactions(block0)
-                      |> Enum.map(fn txn -> TxnParser.parse(hash0, block0, txn, chain) end)
+                      |> Enum.map(fn txn -> TxnParser.parse(hash0, block0, txn) end)
       %{
         hash: hash,
         height: height,
@@ -150,7 +150,7 @@ defmodule BlockchainNode.API.Explorer.Worker do
   defp get_transactions(chain) do
     for {hash, block} <- :blockchain.blocks(chain) do
       for txn <- :blockchain_block.transactions(block) do
-        TxnParser.parse(hash, block, txn, chain)
+        TxnParser.parse(hash, block, txn)
       end
     end
     |> List.flatten()

@@ -66,8 +66,8 @@ defmodule BlockchainNode.API.Account.Worker do
     GenServer.call(@me, {:keys, address, password}, :infinity)
   end
 
-  def update_transaction_fee() do
-    GenServer.cast(@me, :update_transaction_fee)
+  def update() do
+    GenServer.cast(@me, :update)
   end
 
   #==================================================================
@@ -237,12 +237,13 @@ defmodule BlockchainNode.API.Account.Worker do
   end
 
   @impl true
-  def handle_cast(:update_transaction_fee, state) do
+  def handle_cast(:update, state) do
     new_state = Enum.reduce(
       state,
       %{},
-      fn {address, account}, acc ->
-        Map.put(acc, address, Map.put(account, :transaction_fee, transaction_fee()))
+      fn {address, account0}, acc ->
+        account = update_account(account0)
+        Map.put(acc, address, account)
       end)
     {:noreply, new_state}
   end
@@ -360,6 +361,12 @@ defmodule BlockchainNode.API.Account.Worker do
       transaction_fee: transaction_fee(),
       has_association: has_association
     }
+  end
+
+  defp update_account(account) do
+    transaction_fee = transaction_fee()
+    balance = get_balance(account.address)
+    %{account | transaction_fee: transaction_fee, balance: balance}
   end
 
   defp transaction_fee() do

@@ -4,12 +4,13 @@ defmodule BlockchainNode.Watcher.Supervisor do
   @me __MODULE__
 
   alias BlockchainNode.Watcher
-  alias BlockchainNode.API.{Explorer, Account, Gateway}
+  alias BlockchainNode.API.{Explorer, Account, Gateway, Transaction}
 
   #==================================================================
   # API
   #==================================================================
   def start_link(args) do
+    # args: [{load_genesis: true/false}]
     Supervisor.start_link(@me, args, name: @me)
   end
 
@@ -50,15 +51,15 @@ defmodule BlockchainNode.Watcher.Supervisor do
           []},
         restart: :transient,
         type: :worker
+      },
+      %{
+        id: :"BlockchainNode.API.Transaction.Worker",
+        start: {Transaction.Worker,
+          :start_link,
+          [args]},
+        restart: :transient,
+        type: :worker
       }
-      # %{
-      #   id: :"BlockchainNode.Transaction.Worker",
-      #   start: {Transaction.Worker,
-      #     :start_link,
-      #     []},
-      #   restart: :transient,
-      #   type: :worker
-      # }
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
