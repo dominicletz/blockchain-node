@@ -93,6 +93,9 @@ defmodule BlockchainNode.API.Explorer.Worker do
                 Map.merge(acc, %{h => Explorer.FSM.block_data(block)})
               end)
               |> to_sorted_list()
+            false when before == 1 ->
+              {:ok, block} = :blockchain.get_block(before, chain)
+              %{before => Explorer.FSM.block_data(block)} |> to_sorted_list()
             false ->
               Range.new(1, before)
               |> Enum.reduce(%{}, fn h, acc ->
