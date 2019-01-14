@@ -1,7 +1,7 @@
 defmodule BlockchainNode.API.Account.Router do
   use Plug.Router
-  alias BlockchainNode.API.Account.Worker
-  # alias BlockchainNode.API.Transaction.Worker
+  alias BlockchainNode.API.Account
+  # alias BlockchainNode.API.Transaction
 
   plug(:match)
 
@@ -14,22 +14,22 @@ defmodule BlockchainNode.API.Account.Router do
   plug(:dispatch)
 
   get "/" do
-    send_resp(conn, 200, Poison.encode!(Worker.list()))
+    send_resp(conn, 200, Poison.encode!(Account.Worker.list()))
   end
 
   get "/:address" do
-    send_resp(conn, 200, Poison.encode!(Worker.show(address)))
+    send_resp(conn, 200, Poison.encode!(Account.Worker.show(address)))
   end
 
   delete "/:address" do
-    Worker.delete(address)
+    Account.Worker.delete(address)
     send_resp(conn, 200, "")
   end
 
   post "/" do
     params = conn.body_params
     password = params["password"]
-    account = Worker.create(password)
+    account = Account.Worker.create(password)
     send_resp(conn, 201, Poison.encode!(account))
   end
 
@@ -45,7 +45,7 @@ defmodule BlockchainNode.API.Account.Router do
         params["password"]
       end
 
-    case Worker.pay(from_address, to_address, amount, password) do
+    case Account.Worker.pay(from_address, to_address, amount, password) do
       {:error, reason} ->
         error =
           Poison.encode!(%{
@@ -62,21 +62,21 @@ defmodule BlockchainNode.API.Account.Router do
   post "/:address/check_password" do
     params = conn.body_params
     password = params["password"]
-    is_valid = Worker.valid_password?(address, password)
+    is_valid = Account.Worker.valid_password?(address, password)
     send_resp(conn, 200, Poison.encode!(%{valid: is_valid}))
   end
 
   post "/:address/encrypt" do
     params = conn.body_params
     password = params["password"]
-    account = Worker.encrypt(address, password)
+    account = Account.Worker.encrypt(address, password)
     send_resp(conn, 200, Poison.encode!(account))
   end
 
   post "/:address/rename" do
     params = conn.body_params
     name = params["name"]
-    account = Worker.rename(address, name)
+    account = Account.Worker.rename(address, name)
     send_resp(conn, 200, Poison.encode!(account))
   end
 
@@ -90,7 +90,7 @@ defmodule BlockchainNode.API.Account.Router do
         params["password"]
       end
 
-    case Worker.add_association(address, password) do
+    case Account.Worker.add_association(address, password) do
       {:error, reason} ->
         error =
           Poison.encode!(%{
@@ -100,7 +100,7 @@ defmodule BlockchainNode.API.Account.Router do
         send_resp(conn, 500, error)
 
       _ ->
-        account = Worker.show(address)
+        account = Account.Worker.show(address)
         send_resp(conn, 200, Poison.encode!(account))
     end
   end

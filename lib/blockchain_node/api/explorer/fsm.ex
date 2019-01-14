@@ -17,7 +17,7 @@ defmodule BlockchainNode.API.Explorer.FSM do
       end
     end
 
-    defevent add_block(_block), data: _data do
+    defevent add_block(_chain, _block), data: _data do
       # do not have genesis block yet
       next_state(:wait_genesis)
     end
@@ -40,7 +40,7 @@ defmodule BlockchainNode.API.Explorer.FSM do
                   # however, this block is beyond first 100 blocks,
                   # we should accumulate height, height-100 blocks in the state
                   new_data =
-                    Range.new(height0-100, height0)
+                    Range.new((height0-100), height0)
                     |> Enum.reduce([], fn h, acc ->
                       {:ok, block} = :blockchain.get_block(h, chain)
                       [block | acc]
@@ -53,8 +53,18 @@ defmodule BlockchainNode.API.Explorer.FSM do
                   next_state(:wait_block, new_data)
                 false ->
                   # this block is within the first 100 blocks
-                  # just add this directly to the state
-                  new_data = Map.merge(data, %{height0 => block_data(block0)})
+                  # we should accumulate, min(height), height-1 blocks in the state
+                  new_data =
+                    Range.new(Enum.min(Map.keys(data)), (height0-1))
+                    |> Enum.reduce([], fn h, acc ->
+                      {:ok, block} = :blockchain.get_block(h, chain)
+                      [block | acc]
+                    end)
+                    |> Enum.reverse
+                    |> Enum.reduce(%{}, fn block, acc ->
+                      height = :blockchain_block.height(block)
+                      Map.merge(acc, %{height => block_data(block)})
+                    end)
                   next_state(:wait_block, new_data)
               end
             false ->

@@ -39,6 +39,10 @@ defmodule BlockchainNode.API.Explorer.Worker do
     GenServer.call(@me, :list_accounts, :infinity)
   end
 
+  def update_genesis(genesis_block) do
+    GenServer.cast(@me, {:update_genesis, genesis_block})
+  end
+
   def update(block) do
     GenServer.cast(@me, {:update, block})
   end
@@ -79,17 +83,24 @@ defmodule BlockchainNode.API.Explorer.Worker do
     res =
       case Watcher.Worker.chain do
         nil ->
-          fsm.data
-          |> Map.values()
-          |> Enum.sort(&((&1.height >= &2.height)))
-          |> Enum.reject(&is_nil/1)
+          fsm.data |> to_sorted_list()
         chain ->
-          Range.new(before - 1, before - 101)
-          |> Enum.reduce(%{}, fn h, acc ->
-            {:ok, block} = :blockchain.get_block(h, chain)
-            Map.merge(acc, %{h => Explorer.FSM.block_data(block)})
-          end)
-          |> to_sorted_list()
+          case before > 100 do
+            true ->
+              Range.new(before - 1, before - 101)
+              |> Enum.reduce(%{}, fn h, acc ->
+                {:ok, block} = :blockchain.get_block(h, chain)
+                Map.merge(acc, %{h => Explorer.FSM.block_data(block)})
+              end)
+              |> to_sorted_list()
+            false ->
+              Range.new(1, before)
+              |> Enum.reduce(%{}, fn h, acc ->
+                {:ok, block} = :blockchain.get_block(h, chain)
+                Map.merge(acc, %{h => Explorer.FSM.block_data(block)})
+              end)
+              |> to_sorted_list()
+          end
       end
     {:reply, res, state}
   end
@@ -132,6 +143,17 @@ defmodule BlockchainNode.API.Explorer.Worker do
         chain -> get_accounts(chain)
       end
     {:reply, res, state}
+  end
+
+  @impl true
+  def handle_cast({:update_genesis, genesis_block}, state = %{fsm: fsm}) do
+    new_state =
+      case Watcher.Worker.chain() do
+        nil -> state
+        _chain ->
+          %{ state | fsm: Explorer.FSM.add_genesis_block(fsm, genesis_block)}
+      end
+    {:noreply, new_state}
   end
 
   @impl true

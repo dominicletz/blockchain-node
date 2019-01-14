@@ -99,7 +99,7 @@ defmodule BlockchainNode.Watcher.Worker do
     {:ok, genesis_block} = :blockchain.get_block(genesis_hash, chain)
     :ok = Transaction.Worker.update_genesis_transactions(genesis_block)
     :ok = Account.Worker.update()
-    :ok = Explorer.Worker.update(genesis_block)
+    :ok = Explorer.Worker.update_genesis(genesis_block)
     {:noreply, %Watcher{chain: chain}}
   end
 
