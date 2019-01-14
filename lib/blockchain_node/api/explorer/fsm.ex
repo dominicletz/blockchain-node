@@ -3,6 +3,8 @@ defmodule BlockchainNode.API.Explorer.FSM do
 
   use Fsm, initial_state: :wait_genesis, initial_data: %{}
 
+  @blocks_to_keep 100
+
   defstate wait_genesis do
     defevent add_genesis_block(genesis_block) do
       case :blockchain_block.is_genesis(genesis_block) do
@@ -32,23 +34,23 @@ defmodule BlockchainNode.API.Explorer.FSM do
           next_state(:wait_block)
         false ->
           # we haven't added this block before
-          case map_size(data) < 100 do
+          case map_size(data) < @blocks_to_keep do
             true ->
-              # but we don't have 100 blocks yet
-              case height0 > 100 do
+              # but we don't have @blocks_to_keep blocks yet
+              case height0 > @blocks_to_keep do
                 true ->
-                  # however, this block is beyond first 100 blocks,
-                  # we should accumulate height, height-100 blocks in the state
-                  new_data = Range.new((height0-100), height0) |> accumulate_blocks(chain)
+                  # however, this block is beyond first @blocks_to_keep blocks,
+                  # we should accumulate height, height-@blocks_to_keep blocks in the state
+                  new_data = Range.new((height0-@blocks_to_keep), height0) |> accumulate_blocks(chain)
                   next_state(:wait_block, new_data)
                 false ->
-                  # this block is within the first 100 blocks
+                  # this block is within the first @blocks_to_keep blocks
                   # we should accumulate, min(height), height-1 blocks in the state
                   new_data = Range.new(1, (height0-1)) |> accumulate_blocks(chain)
                   next_state(:wait_block, new_data)
               end
             false ->
-              # we have 100 blocks already
+              # we have @blocks_to_keep blocks already
               # but it is possible we may receive a block but the node hasn't synced yet
               # we should find how many we are missing
               max_height = Enum.max(Map.keys(data))
@@ -60,10 +62,17 @@ defmodule BlockchainNode.API.Explorer.FSM do
                     # and remove the oldest one from state
                     Map.put(Map.delete(data, min_height), height0, block_data(block0))
                   false ->
-                    # recover lost blocks and remove the older blocks from state
-                    new_data_fetched = Range.new(max_height, height0) |> accumulate_blocks(chain) |> IO.inspect
-                    new_data_removed = Range.new((min_height + (height0-max_height)), max_height) |> accumulate_blocks(chain) |> IO.inspect
-                    Map.merge(new_data_removed, new_data_fetched)
+                    case height0 > max_height + @blocks_to_keep do
+                      false ->
+                        # recover lost blocks and remove the older blocks from state
+                        new_data_fetched = Range.new(max_height, height0) |> accumulate_blocks(chain)
+                        new_data_removed = Range.new((min_height + (height0-max_height)), max_height) |> accumulate_blocks(chain)
+                        Map.merge(new_data_removed, new_data_fetched)
+                      true ->
+                        # we haven't synced in a long time presumably
+                        # refresh the entire FSM state
+                        Range.new(height0-@blocks_to_keep, height0) |> accumulate_blocks(chain)
+                    end
                 end
               next_state(:wait_block, new_data)
           end
