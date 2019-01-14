@@ -1,4 +1,4 @@
-defmodule BlockchainNode.API.TxnFsm do
+defmodule BlockchainNode.API.Transaction.FSM do
 
   alias BlockchainNode.Util.TxnParser
 
@@ -89,8 +89,8 @@ defmodule BlockchainNode.API.TxnFsm do
   defp update_state(chain, data, block_height, block_time, block_hash) do
     transactions =
       Range.new(data.last_update_height, block_height)
-      |> Enum.reduce([], fn hash, acc ->
-        {:ok, block} = :blockchain.get_block(hash, chain)
+      |> Enum.reduce([], fn height, acc ->
+        {:ok, block} = :blockchain.get_block(height, chain)
         [block | acc]
       end)
       |> Enum.reverse

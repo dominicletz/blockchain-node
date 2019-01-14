@@ -32,7 +32,7 @@ defmodule BlockchainNode.Watcher.Supervisor do
         id: :"BlockchainNode.API.Explorer.Worker",
         start: {Explorer.Worker,
           :start_link,
-          []},
+          [args]},
         restart: :transient,
         type: :worker
       },

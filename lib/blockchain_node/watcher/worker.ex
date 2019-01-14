@@ -5,7 +5,7 @@ defmodule BlockchainNode.Watcher.Worker do
   require Logger
 
   alias BlockchainNode.Watcher
-  alias BlockchainNode.API.{Account, Transaction}
+  alias BlockchainNode.API.{Account, Transaction, Explorer}
 
   #==================================================================
   # API
@@ -99,6 +99,7 @@ defmodule BlockchainNode.Watcher.Worker do
     {:ok, genesis_block} = :blockchain.get_block(genesis_hash, chain)
     :ok = Transaction.Worker.update_genesis_transactions(genesis_block)
     :ok = Account.Worker.update()
+    :ok = Explorer.Worker.update(genesis_block)
     {:noreply, %Watcher{chain: chain}}
   end
 
@@ -109,6 +110,7 @@ defmodule BlockchainNode.Watcher.Worker do
     {:ok, block} = :blockchain.get_block(hash, chain)
     :ok = Transaction.Worker.update_block_transactions(block)
     :ok = Account.Worker.update()
+    :ok = Explorer.Worker.update(block)
     {:noreply, state}
   end
 

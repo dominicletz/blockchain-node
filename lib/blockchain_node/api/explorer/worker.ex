@@ -5,21 +5,14 @@ defmodule BlockchainNode.API.Explorer.Worker do
   @range 100
 
   alias BlockchainNode.Watcher
+  alias BlockchainNode.API.Explorer
   alias BlockchainNode.Util.{Helpers, TxnParser}
 
   #==================================================================
   # API
   #==================================================================
-  def start_link() do
-    GenServer.start_link(@me, :ok, name: @me)
-  end
-
-  def blocks() do
-    GenServer.call(@me, :blocks, :infinity)
-  end
-
-  def blocks(before) do
-    GenServer.call(@me, {:blocks, before}, :infinity)
+  def start_link(args) do
+    GenServer.start_link(@me, args, name: @me)
   end
 
   def list_blocks() do
@@ -46,21 +39,57 @@ defmodule BlockchainNode.API.Explorer.Worker do
     GenServer.call(@me, :list_accounts, :infinity)
   end
 
+  def update(block) do
+    GenServer.cast(@me, {:update, block})
+  end
+
   #==================================================================
   # GenServer Callbacks
   #==================================================================
 
   @impl true
-  def init(state) do
+  def init(args) do
+    state =
+      case Keyword.get(args, :load_genesis, false) do
+        false ->
+          # no genesis block, initialize FSM at :wait_genesis
+          %{fsm: Explorer.FSM.new()}
+        true ->
+          case Watcher.Worker.chain() do
+            nil ->
+              # this should not happen on bootup if genesis block is loaded
+              %{fsm: Explorer.FSM.new()}
+            chain ->
+              # add genesis block as initial FSM state
+              {:ok, genesis_block} = :blockchain.genesis_block(chain)
+              %{fsm: Explorer.FSM.add_genesis_block(Explorer.FSM.new(), genesis_block)}
+          end
+      end
     {:ok, state}
   end
 
   @impl true
-  def handle_call(:blocks, _from, state) do
+  def handle_call(:list_blocks, _from, state = %{fsm: fsm}) when map_size(fsm) > 0 do
+    res = fsm.data |> to_sorted_list
+    {:reply, res, state}
+  end
+
+  @impl true
+  def handle_call({:list_blocks, before}, _from, state = %{fsm: fsm}) do
     res =
       case Watcher.Worker.chain do
-        nil -> %{}
-        chain -> get_blocks(chain)
+        nil ->
+          fsm.data
+          |> Map.values()
+          |> Enum.sort(&((&1.height >= &2.height)))
+          |> Enum.reject(&is_nil/1)
+        chain ->
+          Range.new(before - 1, before - 101)
+          |> Enum.reduce(%{}, fn h, acc ->
+            {:ok, block} = :blockchain.get_block(h, chain)
+            Map.merge(acc, %{h => Explorer.FSM.block_data(block)})
+          end)
+          |> to_sorted_list()
       end
     {:reply, res, state}
   end
@@ -71,26 +100,6 @@ defmodule BlockchainNode.API.Explorer.Worker do
       case Watcher.Worker.chain do
         nil -> %{}
         chain -> get_transactions(chain)
-      end
-    {:reply, res, state}
-  end
-
-  @impl true
-  def handle_call(:list_blocks, _from, state) do
-    res =
-      case Watcher.Worker.chain do
-        nil -> []
-        chain -> get_blocks(chain) |> as_blocks_list(chain)
-      end
-    {:reply, res, state}
-  end
-
-  @impl true
-  def handle_call({:list_blocks, before}, _from, state) do
-    res =
-      case Watcher.Worker.chain do
-        nil -> []
-        chain -> get_blocks(chain) |> as_blocks_list(chain, before)
       end
     {:reply, res, state}
   end
@@ -125,26 +134,25 @@ defmodule BlockchainNode.API.Explorer.Worker do
     {:reply, res, state}
   end
 
-  #==================================================================
+  @impl true
+  def handle_cast({:update, block}, state = %{fsm: fsm}) do
+    new_state =
+      case Watcher.Worker.chain() do
+        nil -> state
+        chain ->
+          %{ state | fsm: Explorer.FSM.add_block(fsm, chain, block)}
+      end
+    {:noreply, new_state}
+  end
+
   # Private Functions
   #==================================================================
-  defp get_blocks(chain) do
-    for {hash0, block0} <- :blockchain.blocks(chain) do
-      hash = hash0 |> Base.encode16(case: :lower)
-      height = :blockchain_block.height(block0)
-      time =  :blockchain_block.meta(block0).block_time
-      round = :blockchain_block.meta(block0).hbbft_round
-      transactions =  :blockchain_block.transactions(block0)
-                      |> Enum.map(fn txn -> TxnParser.parse(hash0, block0, txn) end)
-      %{
-        hash: hash,
-        height: height,
-        time: time,
-        round: round,
-        transactions: transactions
-      }
-    end
-    |> Enum.reduce(%{}, fn block, acc -> Map.put(acc, block.height, block) end)
+
+  defp to_sorted_list(map) do
+    map
+    |> Map.values()
+    |> Enum.sort(&((&1.height >= &2.height)))
+    |> Enum.reject(&is_nil/1)
   end
 
   defp get_transactions(chain) do
@@ -158,19 +166,6 @@ defmodule BlockchainNode.API.Explorer.Worker do
     |> Enum.with_index()
     |> Enum.map(fn {txn, i} -> Map.put(txn, :index, i) end)
     |> Enum.reduce(%{}, fn txn, acc -> Map.put(acc, txn.index, txn) end)
-  end
-
-  defp as_blocks_list(blocks, chain) do
-    {:ok, height} = :blockchain.height(chain)
-    Range.new(height, height - (@range + 1))
-    |> Enum.map(fn i -> Map.get(blocks, i) end)
-    |> Enum.reject(&is_nil/1)
-  end
-
-  defp as_blocks_list(blocks, _chain, before) do
-    Range.new(before - 1, before - (@range + 1))
-    |> Enum.map(fn i -> Map.get(blocks, i) end)
-    |> Enum.reject(&is_nil/1)
   end
 
   defp as_transactions_list(transactions, _chain) do
