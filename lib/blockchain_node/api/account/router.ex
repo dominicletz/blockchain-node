@@ -105,16 +105,31 @@ defmodule BlockchainNode.API.Account.Router do
     end
   end
 
-  get "/transactions" do
+  get "/:address/transactions" do
     case conn.query_params do
       %{"page" => page, "per_page" => per_page} ->
         page = String.to_integer(page)
         per_page = String.to_integer(per_page)
 
-        send_resp(conn, 200, Poison.encode!(Transaction.Worker.all_transactions(page, per_page)))
+        send_resp(
+          conn,
+          200,
+          Poison.encode!(Transaction.Worker.transactions_for_address(address, page, per_page))
+        )
+
+      # %{"count" => count, "time_period" => time_period} ->
+      #   send_resp(
+      #     conn,
+      #     200,
+      #     Poison.encode!(AccountTransactions.balances_for_address(address, count, time_period))
+      #   )
 
       _ ->
-        send_resp(conn, 200, Poison.encode!(Transaction.Worker.all_transactions(0, 10)))
+        send_resp(
+          conn,
+          200,
+          Poison.encode!(Transaction.Worker.transactions_for_address(address, 0, 10))
+        )
     end
   end
 
@@ -122,32 +137,5 @@ defmodule BlockchainNode.API.Account.Router do
     send_resp(conn, 404, "404")
   end
 
-  ## get "/:address/transactions" do
-  ##   case conn.query_params do
-  ##     %{"page" => page, "per_page" => per_page} ->
-  ##       page = String.to_integer(page)
-  ##       per_page = String.to_integer(per_page)
-
-  ##       send_resp(
-  ##         conn,
-  ##         200,
-  ##         Poison.encode!(AccountTransactions.transactions_for_address(address, page, per_page))
-  ##       )
-
-  ##     %{"count" => count, "time_period" => time_period} ->
-  ##       send_resp(
-  ##         conn,
-  ##         200,
-  ##         Poison.encode!(AccountTransactions.balances_for_address(address, count, time_period))
-  ##       )
-
-  ##     _ ->
-  ##       send_resp(
-  ##         conn,
-  ##         200,
-  ##         Poison.encode!(AccountTransactions.transactions_for_address(address, 0, 10))
-  ##       )
-  ##   end
-  ## end
 
 end

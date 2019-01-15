@@ -112,7 +112,7 @@ defmodule BlockchainNode.API.Transaction.Worker do
   # Private Functions
   #==================================================================
 
-  defp reply(transactions, page \\ 0, per_page \\ 10) do
+  defp reply(transactions, page, per_page) do
     entries = Enum.slice(transactions, page * per_page, per_page)
     %{entries: entries, total: length(entries), page: page, per_page: per_page}
   end
