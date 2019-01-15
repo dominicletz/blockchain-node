@@ -21,6 +21,10 @@ defmodule BlockchainNode.API.Transaction.Worker do
     GenServer.cast(@me, {:update_block_transactions, block})
   end
 
+  def all_transactions(page, per_page) do
+    GenServer.call(@me, {:all_transactions, page, per_page}, :infinity)
+  end
+
   #==================================================================
   # GenServer Callbacks
   #==================================================================
@@ -65,6 +69,18 @@ defmodule BlockchainNode.API.Transaction.Worker do
           %{ state | fsm: Transaction.FSM.add_block_transactions(fsm, chain, block)}
       end
     {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_call({:all_transactions, page, per_page}, _from, state = %{fsm: fsm}) do
+    res =
+      case Watcher.Worker.chain() do
+        nil ->
+          fsm.data.payment_txns
+        chain ->
+          fsm.data.payment_txns
+      end
+    {:reply, res, state}
   end
 
   #==================================================================

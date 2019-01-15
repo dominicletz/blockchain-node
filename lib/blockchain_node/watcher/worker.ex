@@ -104,7 +104,7 @@ defmodule BlockchainNode.Watcher.Worker do
   end
 
   @impl true
-  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %Watcher{chain: chain}) do
+  def handle_info({:blockchain_event, {:add_block, hash, _flag}}, state = %Watcher{chain: chain}) when chain != nil do
     # NOTE: send updates to other workers as needed here
     Logger.info("Got add_block event")
     {:ok, block} = :blockchain.get_block(hash, chain)

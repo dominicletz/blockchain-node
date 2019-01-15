@@ -1,7 +1,7 @@
 defmodule BlockchainNode.API.Account.Router do
   use Plug.Router
   alias BlockchainNode.API.Account
-  # alias BlockchainNode.API.Transaction
+  alias BlockchainNode.API.Transaction
 
   plug(:match)
 
@@ -105,22 +105,22 @@ defmodule BlockchainNode.API.Account.Router do
     end
   end
 
+  get "/transactions" do
+    case conn.query_params do
+      %{"page" => page, "per_page" => per_page} ->
+        page = String.to_integer(page)
+        per_page = String.to_integer(per_page)
+
+        send_resp(conn, 200, Poison.encode!(Transaction.Worker.all_transactions(page, per_page)))
+
+      _ ->
+        send_resp(conn, 200, Poison.encode!(Transaction.Worker.all_transactions(0, 10)))
+    end
+  end
+
   match _ do
     send_resp(conn, 404, "404")
   end
-
-  ## get "/transactions" do
-  ##   case conn.query_params do
-  ##     %{"page" => page, "per_page" => per_page} ->
-  ##       page = String.to_integer(page)
-  ##       per_page = String.to_integer(per_page)
-
-  ##       send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(page, per_page)))
-
-  ##     _ ->
-  ##       send_resp(conn, 200, Poison.encode!(AccountTransactions.all_transactions(0, 10)))
-  ##   end
-  ## end
 
   ## get "/:address/transactions" do
   ##   case conn.query_params do
