@@ -21,8 +21,12 @@ defmodule BlockchainNode.API.Transaction.Worker do
     GenServer.cast(@me, {:update_block_transactions, block})
   end
 
-  def all_transactions(page, per_page) do
+  def all_transactions(page \\ 0, per_page \\ 10) do
     GenServer.call(@me, {:all_transactions, page, per_page}, :infinity)
+  end
+
+  def transactions_for_address(address, page \\ 0, per_page \\ 10) do
+    GenServer.call(@me, {:transactions_for_address, address, page, per_page}, :infinity)
   end
 
   #==================================================================
@@ -73,19 +77,45 @@ defmodule BlockchainNode.API.Transaction.Worker do
 
   @impl true
   def handle_call({:all_transactions, page, per_page}, _from, state = %{fsm: fsm}) do
-    res =
+    reply =
       case Watcher.Worker.chain() do
-        nil ->
-          fsm.data.payment_txns
-        chain ->
-          fsm.data.payment_txns
+        nil -> []
+        _chain ->
+          IO.puts "page: #{page}, per_page: #{per_page}"
+          reply(MapSet.to_list(MapSet.union(fsm.data.payment_txns, fsm.data.coinbase_txns)), page, per_page)
       end
-    {:reply, res, state}
+    {:reply, reply, state}
+  end
+
+  @impl true
+  def handle_call({:transactions_for_address, address, page, per_page}, _from, state = %{fsm: fsm}) do
+    reply =
+      case Watcher.Worker.chain() do
+        nil -> []
+        _chain ->
+          payments =
+            Enum.filter(fsm.data.payment_txns,
+              fn txn ->
+                txn.payee == address || txn.payer == address
+              end)
+          coinbases =
+            Enum.filter(fsm.data.coinbase_txns,
+              fn txn ->
+                txn.payee == address
+              end)
+          reply((payments ++ coinbases), page, per_page)
+      end
+    {:reply, reply, state}
   end
 
   #==================================================================
   # Private Functions
   #==================================================================
+
+  defp reply(transactions, page \\ 0, per_page \\ 10) do
+    entries = Enum.slice(transactions, page * per_page, per_page)
+    %{entries: entries, total: length(entries), page: page, per_page: per_page}
+  end
 
 end
 

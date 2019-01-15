@@ -29,6 +29,14 @@ defmodule BlockchainNode.Watcher.Supervisor do
         type: :worker
       },
       %{
+        id: :"BlockchainNode.API.Account.Worker",
+        start: {Account.Worker,
+          :start_link,
+          []},
+        restart: :transient,
+        type: :worker
+      },
+      %{
         id: :"BlockchainNode.API.Explorer.Worker",
         start: {Explorer.Worker,
           :start_link,
@@ -45,14 +53,6 @@ defmodule BlockchainNode.Watcher.Supervisor do
         type: :worker
       },
       %{
-        id: :"BlockchainNode.API.Account.Worker",
-        start: {Account.Worker,
-          :start_link,
-          []},
-        restart: :transient,
-        type: :worker
-      },
-      %{
         id: :"BlockchainNode.API.Transaction.Worker",
         start: {Transaction.Worker,
           :start_link,
@@ -61,7 +61,6 @@ defmodule BlockchainNode.Watcher.Supervisor do
         type: :worker
       }
     ]
-
     Supervisor.init(children, strategy: :one_for_one)
   end
 end
