@@ -1,0 +1,149 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Node Server API
+  description: An API for interfacing with the Helium Blockchain Network.
+
+servers:
+  - url: http://{subdomain}.helium.com/{version}
+    description: The main production server.
+    variables:
+      subdomain:
+        default: node
+      version:
+        enum:
+          - v1
+        default: v1
+
+paths:
+  #
+  # Status (root)
+  #
+  /:
+    get:
+      description: Returns the current blockchain status.
+      responses:
+        '200':
+          description: blockchain status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+
+  #
+  # Health
+  #
+  /health:
+    get:
+      description: Server health check. 200 Server is OK, Anything 400 and above Server should be restarted. Should be used as liveness probe (e.g. Kubernetes).
+      responses:
+        '200':
+          description: health check ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+        '500':
+          description: health check not ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+              
+
+#
+# Blocks
+#
+
+#
+# Transactions
+#
+
+#
+# Hotspots
+#
+  /hotspots:
+    get:
+      description: Returns a list of all the hotspots.
+      responses:
+        '200':
+          description: list hotspots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hotspot'
+
+
+
+  /account:
+
+
+components:
+  #
+  # Schemas
+  #
+  schemas:
+
+    #
+    # HealthCheck
+    #
+    HealthCheck:
+      properties:
+        ok:
+          type: boolean
+
+    #
+    # Status
+    #
+    Status:
+      properties:
+        nodeHeight:
+          description: The current block height syncronized to this node.
+          type: integer
+          format: int64
+        chainHeight:
+          description: The current block height of the chain.
+          type: integer
+          format: int64
+        time:
+          description: The most recent block creation time.
+          type: string
+          format: date-time
+        interval:
+          description: The average new block time in seconds.
+          type: integer
+          format: int64
+    
+    #
+    # Hotspot
+    #
+    Hotspot:
+        properties:
+          address:
+            description: The hotspot peer address.
+            type: string
+          owner:
+            description: The owner wallet address.
+            type: string
+          h3Index:
+            description: The H3 location index.
+            type: string
+          lat:
+            description: The latitude of location.
+            type: string
+          lon:
+            description: The longitude of location.
+            type: string
+          blocks_mined:
+            description: The number of blocks mined.
+            type: integer
+            format: int64
+          score:
+            description: The current Proof-of-Coverage score.
+            type: number
+            format: float
+          
+
+
