@@ -17,25 +17,13 @@ servers:
 
 paths:
   #
-  # Status (root)
-  #
-  /:
-    get:
-      description: Returns the current blockchain status.
-      responses:
-        '200':
-          description: blockchain status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Status'
-
-  #
   # Health
   #
   /health:
     get:
       description: Server health check. 200 Server is OK, Anything 400 and above Server should be restarted. Should be used as liveness probe (e.g. Kubernetes).
+      tags:
+        - health
       responses:
         '200':
           description: health check ok
@@ -49,7 +37,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthCheck'
-              
+ 
+
+  #
+  # Status (root)
+  #
+  /:
+    get:
+      description: Returns the current blockchain status.
+      tags:
+        - /
+      responses:
+        '200':
+          description: blockchain status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+
+             
 
 #
 # Blocks
@@ -65,6 +71,8 @@ paths:
   /hotspots:
     get:
       description: Returns a list of all the hotspots.
+      tags:
+        - hotspots
       responses:
         '200':
           description: list hotspots
@@ -75,9 +83,6 @@ paths:
                 items:
                   $ref: '#/components/schemas/Hotspot'
 
-
-
-  /account:
 
 
 components:
