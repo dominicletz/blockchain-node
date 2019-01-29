@@ -70,6 +70,23 @@ defmodule BlockchainNode.Accounts do
     AccountTransactions.update_transactions_state({:delete, address})
   end
 
+  def pay(from_address, to_address, amount, password, nonce) do
+    case load_keys(from_address, password) do
+      {:ok, private_key, _public_key} ->
+        case :blockchain_worker.blockchain() do
+          :undefined ->
+            {:error, "undefined_blockchain"}
+          chain ->
+            from = address_bin(from_address)
+            to = address_bin(to_address)
+            {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
+            :blockchain_worker.payment_txn(private_key, from, to, amount, fee, nonce)
+        end
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   def pay(from_address, to_address, amount, password) do
     case load_keys(from_address, password) do
       {:ok, private_key, _public_key} ->
@@ -163,6 +180,7 @@ defmodule BlockchainNode.Accounts do
       name: data["name"],
       public_key: data["public_key"],
       balance: get_balance(address_b58),
+      nonce: get_nonce(address_b58),
       encrypted: data["encrypted"],
       transaction_fee: transaction_fee,
       has_association: has_association?(address_b58)
@@ -198,6 +216,27 @@ defmodule BlockchainNode.Accounts do
     case Crypto.decrypt(password, iv, tag, crypted) do
       :error -> {:error, :invalid_password}
       pem -> :libp2p_crypto.from_pem(pem)
+    end
+  end
+
+  def get_nonce(address) do
+    case :blockchain_worker.blockchain() do
+      :undefined ->
+        0
+      chain ->
+        case :blockchain.ledger(chain) do
+          :undefined ->
+            0
+          ledger ->
+            case address
+                 |> to_charlist()
+                 |> :libp2p_crypto.b58_to_address()
+                 |> :blockchain_ledger_v1.find_entry(ledger) do
+              {:ok, entry} ->
+                entry |> :blockchain_ledger_entry_v1.nonce()
+              {:error, _reason} -> 0
+            end
+        end
     end
   end
 

@@ -5,6 +5,7 @@ defmodule BlockchainNode.Accounts.Account do
     :name,
     :public_key,
     :balance,
+    :nonce,
     :encrypted,
     :transaction_fee,
     :has_association
