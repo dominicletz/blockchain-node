@@ -64,7 +64,7 @@ defmodule BlockchainNode.Helpers do
 
   def bin_address_to_b58_string(bin) do
     bin
-    |> :libp2p_crypto.address_to_b58()
+    |> :libp2p_crypto.bin_to_b58()
     |> to_string()
   end
 

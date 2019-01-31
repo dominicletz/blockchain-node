@@ -268,7 +268,7 @@ defmodule BlockchainNode.Explorer do
   end
 
   defp addr_to_b58(addr) do
-    addr |> :libp2p_crypto.address_to_b58() |> to_string()
+    addr |> :libp2p_crypto.bin_to_b58() |> to_string()
   end
 
   defp to_hex(binary) do
