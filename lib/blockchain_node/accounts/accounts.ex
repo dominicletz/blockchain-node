@@ -22,15 +22,19 @@ defmodule BlockchainNode.Accounts do
   end
 
   def create(nil) do
-    keys = {private_key, public_key} = :libp2p_crypto.generate_keys()
-    add_association(keys)
+    keymap = %{:secret => _private_key, :public => public_key} = :libp2p_crypto.generate_keys(:ecc_compact)
+
+    keybin = :libp2p_crypto.keys_to_bin(keymap)
+
+    add_association(keymap)
+
     address = address_str(public_key)
 
     file_content =
       Poison.encode!(%{
         encrypted: false,
         public_key: public_key_str(public_key),
-        pem: :libp2p_crypto.to_pem(private_key)
+        keybin: :libp2p_crypto.bin_to_b58(keybin)
       })
 
     File.mkdir_p(keys_dir())
@@ -39,10 +43,16 @@ defmodule BlockchainNode.Accounts do
   end
 
   def create(password) do
-    keys = {private_key, public_key} = :libp2p_crypto.generate_keys()
-    add_association(keys)
+
+    keymap = %{:secret => _private_key, :public => public_key} = :libp2p_crypto.generate_keys(:ecc_compact)
+
+    keybin = :libp2p_crypto.keys_to_bin(keymap)
+
+    add_association(keymap)
+
     address = address_str(public_key)
-    {iv, tag, data} = Crypto.encrypt(password, :libp2p_crypto.to_pem(private_key))
+
+    {iv, tag, data} = Crypto.encrypt(password, keybin)
 
     file_content =
       Poison.encode!(%{
@@ -72,7 +82,7 @@ defmodule BlockchainNode.Accounts do
 
   def pay(from_address, to_address, amount, password, nonce) do
     case load_keys(from_address, password) do
-      {:ok, private_key, _public_key} ->
+      {:ok, %{:secret => private_key, :public => _public_key}} ->
         case :blockchain_worker.blockchain() do
           :undefined ->
             {:error, "undefined_blockchain"}
@@ -89,7 +99,7 @@ defmodule BlockchainNode.Accounts do
 
   def pay(from_address, to_address, amount, password) do
     case load_keys(from_address, password) do
-      {:ok, private_key, _public_key} ->
+      {:ok, %{:secret => private_key, :public => _public_key}} ->
         case :blockchain_worker.blockchain() do
           :undefined ->
             {:error, "undefined_blockchain"}
@@ -105,24 +115,29 @@ defmodule BlockchainNode.Accounts do
   end
 
   def encrypt(address, password) do
-    {:ok, private_key, public_key} = load_keys(address, nil)
-    pem_bin = :libp2p_crypto.to_pem(private_key)
-    {iv, tag, data} = Crypto.encrypt(password, pem_bin)
+    case load_keys(address, nil) do
+      {:ok, keymap=%{:secret => _private_key, :public => public_key}} ->
+        {iv, tag, data} = Crypto.encrypt(password, :libp2p_crypto.keys_to_bin(keymap))
 
-    file_content =
-      Poison.encode!(%{
-        encrypted: true,
-        public_key: public_key_str(public_key),
-        iv: iv,
-        tag: tag,
-        data: data
-      })
+        file_content =
+          Poison.encode!(%{
+            encrypted: true,
+            public_key: public_key_str(public_key),
+            iv: iv,
+            tag: tag,
+            data: data
+          })
 
-    delete(address)
-    filename = to_filename(address)
-    File.write(filename, file_content, [:binary])
-    load_account(address)
+        delete(address)
+        filename = to_filename(address)
+        File.write(filename, file_content, [:binary])
+        load_account(address)
+      {:error, reason} ->
+        {:erorr, reason}
+    end
   end
+
+
 
   def rename(address, name) do
     filename = to_filename(address)
@@ -148,7 +163,7 @@ defmodule BlockchainNode.Accounts do
   end
 
   defp address_bin(address_b58) do
-    address_b58 |> to_charlist() |> :libp2p_crypto.b58_to_address()
+    address_b58 |> to_charlist() |> :libp2p_crypto.b58_to_bin()
   end
 
   defp address_str(public_key) do
@@ -157,7 +172,7 @@ defmodule BlockchainNode.Accounts do
 
   defp public_key_str(public_key) do
     # temp
-    Base.encode64(:erlang.term_to_binary(public_key))
+    Base.encode64(:libp2p_crypto.pubkey_to_bin(public_key))
   end
 
   # loads publically available info about an account
@@ -201,8 +216,8 @@ defmodule BlockchainNode.Accounts do
     if data["encrypted"] do
       {:error, :encrypted}
     else
-      pem = data["pem"]
-      :libp2p_crypto.from_pem(pem)
+      keybin = data["keybin"]
+      {:ok, :libp2p_crypto.keys_from_bin(:libp2p_crypto.b58_to_bin(keybin))}
     end
   end
 
@@ -211,11 +226,12 @@ defmodule BlockchainNode.Accounts do
 
     iv = data["iv"]
     tag = data["tag"]
-    crypted = data["data"]
+    encrypted = data["data"]
 
-    case Crypto.decrypt(password, iv, tag, crypted) do
+    case Crypto.decrypt(password, iv, tag, encrypted) do
       :error -> {:error, :invalid_password}
-      pem -> :libp2p_crypto.from_pem(pem)
+      bin ->
+        {:ok, :libp2p_crypto.keys_from_bin(bin)}
     end
   end
 
@@ -230,7 +246,7 @@ defmodule BlockchainNode.Accounts do
           ledger ->
             case address
                  |> to_charlist()
-                 |> :libp2p_crypto.b58_to_address()
+                 |> :libp2p_crypto.b58_to_bin()
                  |> :blockchain_ledger_v1.find_entry(ledger) do
               {:ok, entry} ->
                 entry |> :blockchain_ledger_entry_v1.nonce()
@@ -251,7 +267,7 @@ defmodule BlockchainNode.Accounts do
           ledger ->
             case address
                  |> to_charlist()
-                 |> :libp2p_crypto.b58_to_address()
+                 |> :libp2p_crypto.b58_to_bin()
                  |> :blockchain_ledger_v1.find_entry(ledger) do
               {:ok, entry} ->
                 entry |> :blockchain_ledger_entry_v1.balance()
@@ -263,18 +279,18 @@ defmodule BlockchainNode.Accounts do
 
   def add_association(address_b58, password) do
     case load_keys(address_b58, password) do
-      {:ok, private_key, public_key} ->
-        add_association({private_key, public_key})
+      {:ok, keymap} ->
+        add_association(keymap)
 
       {:error, reason} ->
         {:error, reason}
     end
   end
 
-  def add_association({private_key, public_key}) do
+  def add_association(%{:secret => private_key, :public => public_key}=_keymap) do
     association =
       :libp2p_peer.mk_association(
-        :libp2p_crypto.pubkey_to_address(public_key),
+        :libp2p_crypto.pubkey_to_bin(public_key),
         swarm_address(),
         :libp2p_crypto.mk_sig_fun(private_key)
       )
@@ -289,7 +305,7 @@ defmodule BlockchainNode.Accounts do
   end
 
   def swarm_address() do
-    :blockchain_swarm.swarm() |> :libp2p_swarm.address()
+    :blockchain_swarm.pubkey_bin()
   end
 
   def get_peer() do
@@ -315,4 +331,5 @@ defmodule BlockchainNode.Accounts do
         end
     end
   end
+
 end

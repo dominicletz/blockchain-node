@@ -476,7 +476,7 @@ end
     update(:tokens, Enum.reject(tokens, fn t -> t.token == token end))
   end
 
-  def confirm_assert_location(owner_address, gateway_address, password, token) do
+  def confirm_assert_location(owner_address, _gateway_address, password, token) do
     case Accounts.load_keys(owner_address, password) do
       {:ok, private_key, _public_key} ->
         tokens = get(:tokens)
