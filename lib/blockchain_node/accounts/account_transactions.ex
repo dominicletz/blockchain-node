@@ -166,19 +166,18 @@ defmodule BlockchainNode.Accounts.AccountTransactions do
 
     txns_by_height_list =
       Enum.reduce(blocks, [], fn b, acc ->
-        coinbase_txns = :blockchain_block.coinbase_transactions(b)
-        payment_txns = :blockchain_block.payment_transactions(b)
+        txns = :blockchain_block.transactions(b)
+
+        coinbase_txns = Enum.filter(txns, fn t -> :blockchain_txn.type(t) == :blockchain_txn_coinbase_v1 end)
+        payment_txns = Enum.filter(txns, fn t -> :blockchain_txn.type(t) == :blockchain_txn_payment_v1 end)
+
         height = :blockchain_block.height(b)
 
         time =
           case new_head_hash == genesis_hash do
             true -> 1_514_764_800
             false ->
-              case Map.fetch(:blockchain_block.meta(b), :block_time) do
-                {:ok, block_time} -> block_time
-                  # 2018 Jan 1st as temp date, change later when network launches!
-                _ -> 1_514_764_800
-              end
+              :blockchain_block.time(b)
           end
 
         cond do

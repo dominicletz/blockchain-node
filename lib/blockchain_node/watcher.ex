@@ -99,11 +99,11 @@ defmodule BlockchainNode.Watcher do
     type = "assertLocationRequest"
     gateway_address =
       txn
-      |> :blockchain_txn_assert_location_v1.gateway_address()
+      |> :blockchain_txn_assert_location_v1.gateway()
       |> Helpers.bin_address_to_b58_string()
     owner_address =
       txn
-      |> :blockchain_txn_assert_location_v1.owner_address()
+      |> :blockchain_txn_assert_location_v1.owner()
       |> Helpers.bin_address_to_b58_string()
     location =
       txn
@@ -113,8 +113,8 @@ defmodule BlockchainNode.Watcher do
     old_token =
       Enum.find(existing_tokens, fn t ->
         Map.get(t, :txn) != nil and
-        gateway_address == :blockchain_txn_assert_location_v1.gateway_address(t.txn) |> Helpers.bin_address_to_b58_string and
-        owner_address == :blockchain_txn_assert_location_v1.owner_address(t.txn) |> Helpers.bin_address_to_b58_string
+        gateway_address == :blockchain_txn_assert_location_v1.gateway(t.txn) |> Helpers.bin_address_to_b58_string and
+        owner_address == :blockchain_txn_assert_location_v1.owner(t.txn) |> Helpers.bin_address_to_b58_string
       end)
 
     case old_token do
@@ -163,9 +163,9 @@ defmodule BlockchainNode.Watcher do
     %{
       type: "newGatewayRequest",
       ownerAddress:
-        Helpers.bin_address_to_b58_string(:blockchain_txn_add_gateway_v1.owner_address(txn)),
+        Helpers.bin_address_to_b58_string(:blockchain_txn_add_gateway_v1.owner(txn)),
       gatewayAddress:
-        Helpers.bin_address_to_b58_string(:blockchain_txn_add_gateway_v1.gateway_address(txn)),
+        Helpers.bin_address_to_b58_string(:blockchain_txn_add_gateway_v1.gateway(txn)),
       token: to_string(token.token),
       time: current_time
     }

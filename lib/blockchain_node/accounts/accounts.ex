@@ -90,7 +90,7 @@ defmodule BlockchainNode.Accounts do
             from = address_bin(from_address)
             to = address_bin(to_address)
             {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
-            :blockchain_worker.payment_txn(private_key, from, to, amount, fee, nonce)
+            :blockchain_worker.payment_txn(:libp2p_crypto.mk_sig_fun(private_key), from, to, amount, fee, nonce)
         end
       {:error, reason} ->
         {:error, reason}
@@ -107,7 +107,7 @@ defmodule BlockchainNode.Accounts do
             from = address_bin(from_address)
             to = address_bin(to_address)
             {:ok, fee} = :blockchain_ledger_v1.transaction_fee(:blockchain.ledger(chain))
-            :blockchain_worker.payment_txn(private_key, from, to, amount, fee)
+            :blockchain_worker.payment_txn(:libp2p_crypto.mk_sig_fun(private_key), from, to, amount, fee)
         end
       {:error, reason} ->
         {:error, reason}

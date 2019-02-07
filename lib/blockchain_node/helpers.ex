@@ -22,10 +22,8 @@ defmodule BlockchainNode.Helpers do
         case head_block == genesis_block do
           true ->
             0
-
           false ->
-            meta = head_block |> :blockchain_block.meta()
-            meta.block_time
+            :blockchain_block.time(head_block)
         end
     end
   end
@@ -46,7 +44,7 @@ defmodule BlockchainNode.Helpers do
             !:blockchain_block.is_genesis(block) &&
               :blockchain_block.height(block) >= last_height - 200
           end)
-          |> Enum.map(fn block -> :blockchain_block.meta(block).block_time end)
+          |> Enum.map(fn block -> :blockchain_block.time(block) end)
           |> Enum.sort()
 
         intervals =

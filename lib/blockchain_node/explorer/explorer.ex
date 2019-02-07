@@ -79,8 +79,8 @@ defmodule BlockchainNode.Explorer do
               %{
                 hash: hash |> Base.encode16(case: :lower),
                 height: :blockchain_block.height(block),
-                time: :blockchain_block.meta(block).block_time,
-                round: :blockchain_block.meta(block).hbbft_round,
+                time: :blockchain_block.time(block),
+                round: :blockchain_block.hbbft_round(block),
                 transactions:
                   :blockchain_block.transactions(block)
                   |> Enum.map(fn txn -> parse_txn(hash, block, txn, chain) end)
@@ -129,7 +129,7 @@ defmodule BlockchainNode.Explorer do
   end
 
   defp parse_txn(block_hash, block, txn, chain) do
-    parse_txn(:blockchain_transactions.type(txn), block_hash, block, txn, chain)
+    parse_txn(:blockchain_txn.type(txn), block_hash, block, txn, chain)
   end
 
   defp parse_txn(:blockchain_txn_payment_v1 = txn_mod, block_hash, block, txn, chain) do
@@ -253,7 +253,7 @@ defmodule BlockchainNode.Explorer do
           %{
             block_hash: block_hash |> to_hex(),
             height: :blockchain_block.height(block),
-            time: :blockchain_block.meta(block).block_time
+            time: :blockchain_block.time(block)
           }
       end
 
