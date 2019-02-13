@@ -172,8 +172,8 @@ defmodule BlockchainNode.Explorer do
   defp parse_txn(:blockchain_txn_add_gateway_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "add_hotspot",
-      gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
-      owner: txn |> txn_mod.owner_address() |> addr_to_b58()
+      gateway: txn |> txn_mod.gateway() |> addr_to_b58(),
+      owner: txn |> txn_mod.owner() |> addr_to_b58()
     }
     |> Map.merge(parse_txn_common(txn_mod, block_hash, block, txn, chain))
   end
@@ -181,8 +181,8 @@ defmodule BlockchainNode.Explorer do
   defp parse_txn(:blockchain_txn_assert_location_v1 = txn_mod, block_hash, block, txn, chain) do
     %{
       type: "assert_location",
-      gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
-      owner: txn |> txn_mod.owner_address() |> addr_to_b58(),
+      gateway: txn |> txn_mod.gateway() |> addr_to_b58(),
+      owner: txn |> txn_mod.owner() |> addr_to_b58(),
       location: txn |> txn_mod.location() |> Helpers.to_h3_string(),
       nonce: txn |> txn_mod.nonce(),
       fee: txn |> txn_mod.fee()
@@ -215,14 +215,14 @@ defmodule BlockchainNode.Explorer do
         :undefined ->
           %{
             type: "gen_hotspot",
-            gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
-            owner: txn |> txn_mod.owner_address() |> addr_to_b58()
+            gateway: txn |> txn_mod.gateway() |> addr_to_b58(),
+            owner: txn |> txn_mod.owner() |> addr_to_b58()
           }
         location ->
           %{
             type: "gen_gateway",
-            gateway: txn |> txn_mod.gateway_address() |> addr_to_b58(),
-            owner: txn |> txn_mod.owner_address() |> addr_to_b58(),
+            gateway: txn |> txn_mod.gateway() |> addr_to_b58(),
+            owner: txn |> txn_mod.owner() |> addr_to_b58(),
             location: location |> Helpers.to_h3_string()
           }
       end
